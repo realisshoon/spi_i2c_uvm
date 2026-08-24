@@ -1,0 +1,15 @@
+work/
+csrc/
+simv*
+ucli.key
+vc_hdrs.h
+*.log
+*.vcd
+*.wlf
+*.wdb
+*.ucdb
+cov_work/
+urgReport/
+.idea/
+.vscode/
+
