@@ -1,0 +1,450 @@
+Group : i2c_pkg::i2c_coverage::enhanced_cg
+
+===============================================================================
+Group : i2c_pkg::i2c_coverage::enhanced_cg
+===============================================================================
+SCORE  INSTANCES WEIGHT GOAL   AT LEAST PER INSTANCE AUTO BIN MAX PRINT MISSING 
+ 94.74  94.74    1      100    1        1            64           64            
+
+
+Source File(s) : 
+
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/i2c/tb/i2c_coverage.sv
+
+1 Instances:
+
+SCORE  WEIGHT GOAL   AT LEAST AUTO BIN MAX PRINT MISSING NAME                      
+ 94.74 1      100    1        64           64            tb_i2c.me.obj.enhanced_cg 
+
+
+
+
+-------------------------------------------------------------------------------
+
+Summary for Group   i2c_pkg::i2c_coverage::enhanced_cg
+
+
+
+CATEGORY  EXPECTED UNCOVERED COVERED PERCENT 
+Variables 9        1         8       88.89   
+Crosses   10       0         10      100.00  
+
+
+Variables for Group  i2c_pkg::i2c_coverage::enhanced_cg
+
+
+VARIABLE  EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST AUTO BIN MAX COMMENT 
+addr      5        0         5       100.00  100  1      1        0                    
+ack       2        1         1       50.00   100  1      1        0                    
+direction 2        0         2       100.00  100  1      1        0                    
+
+
+-------------------------------------------------------------------------------
+===============================================================================
+Group Instance : tb_i2c.me.obj.enhanced_cg
+===============================================================================
+SCORE  WEIGHT GOAL   AT LEAST AUTO BIN MAX PRINT MISSING 
+ 94.74 1      100    1        64           64            
+
+
+Group:
+
+SCORE  INSTANCES WEIGHT GOAL   AT LEAST PER INSTANCE AUTO BIN MAX PRINT MISSING COMMENT NAME                               
+ 94.74  94.74    1      100    1        1            64           64                    i2c_pkg::i2c_coverage::enhanced_cg 
+
+
+
+-------------------------------------------------------------------------------
+
+Summary for Group Instance   tb_i2c.me.obj.enhanced_cg
+
+
+
+CATEGORY  EXPECTED UNCOVERED COVERED PERCENT 
+Variables 9        1         8       88.89   
+Crosses   10       0         10      100.00  
+
+
+Variables for Group Instance  tb_i2c.me.obj.enhanced_cg
+
+
+VARIABLE  EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST AUTO BIN MAX COMMENT 
+addr      5        0         5       100.00  100  1      1        0                    
+ack       2        1         1       50.00   100  1      1        0                    
+direction 2        0         2       100.00  100  1      1        0                    
+
+
+Crosses for Group Instance  tb_i2c.me.obj.enhanced_cg
+
+
+CROSS             EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST PRINT MISSING COMMENT 
+address_direction 10       0         10      100.00  100  1      1        0                     
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable addr
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 5        0         5       100.00  
+
+
+User Defined Bins for addr
+
+
+Bins
+
+NAME   COUNT AT LEAST 
+above  848   1        
+below  932   1        
+high   959   1        
+low    952   1        
+target 7449  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable ack
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 2        1         1       50.00   
+
+
+User Defined Bins for ack
+
+
+Uncovered bins
+
+NAME COUNT AT LEAST NUMBER 
+ack  0     1        1      
+
+
+Covered bins
+
+NAME COUNT AT LEAST 
+nack 3861  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable direction
+
+
+CATEGORY                     EXPECTED UNCOVERED COVERED PERCENT 
+Automatically Generated Bins 2        0         2       100.00  
+
+
+Automatically Generated Bins for direction
+
+
+Bins
+
+NAME           COUNT AT LEAST 
+auto_I2C_WRITE 5418  1        
+auto_I2C_READ  5722  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross address_direction
+
+
+Samples crossed: addr direction
+CATEGORY                           EXPECTED UNCOVERED COVERED PERCENT MISSING 
+Automatically Generated Cross Bins 10       0         10      100.00          
+
+
+Automatically Generated Cross Bins for address_direction
+
+
+Bins
+
+addr   direction      COUNT AT LEAST 
+above  auto_I2C_WRITE 418   1        
+above  auto_I2C_READ  430   1        
+below  auto_I2C_WRITE 456   1        
+below  auto_I2C_READ  476   1        
+high   auto_I2C_WRITE 477   1        
+high   auto_I2C_READ  482   1        
+low    auto_I2C_WRITE 479   1        
+low    auto_I2C_READ  473   1        
+target auto_I2C_WRITE 3588  1        
+target auto_I2C_READ  3861  1        
+
+
+Group : i2c_pkg::i2c_coverage::i2c_cg
+
+===============================================================================
+Group : i2c_pkg::i2c_coverage::i2c_cg
+===============================================================================
+SCORE  INSTANCES WEIGHT GOAL   AT LEAST PER INSTANCE AUTO BIN MAX PRINT MISSING 
+100.00 100.00    1      100    1        1            64           64            
+
+
+Source File(s) : 
+
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/i2c/tb/i2c_coverage.sv
+
+1 Instances:
+
+SCORE  WEIGHT GOAL   AT LEAST AUTO BIN MAX PRINT MISSING NAME                 
+100.00 1      100    1        64           64            tb_i2c.me.obj.i2c_cg 
+
+
+
+
+-------------------------------------------------------------------------------
+
+Summary for Group   i2c_pkg::i2c_coverage::i2c_cg
+
+
+
+CATEGORY  EXPECTED UNCOVERED COVERED PERCENT 
+Variables 15       0         15      100.00  
+Crosses   10       0         10      100.00  
+
+
+Variables for Group  i2c_pkg::i2c_coverage::i2c_cg
+
+
+VARIABLE         EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST AUTO BIN MAX COMMENT 
+cp_op            2        0         2       100.00  100  1      1        0                    
+cp_slave_addr    1        0         1       100.00  100  1      1        0                    
+cp_write_data    5        0         5       100.00  100  1      1        0                    
+cp_slave_tx_data 5        0         5       100.00  100  1      1        0                    
+cp_ack           2        0         2       100.00  100  1      1        0                    
+
+
+-------------------------------------------------------------------------------
+===============================================================================
+Group Instance : tb_i2c.me.obj.i2c_cg
+===============================================================================
+SCORE  WEIGHT GOAL   AT LEAST AUTO BIN MAX PRINT MISSING 
+100.00 1      100    1        64           64            
+
+
+Group:
+
+SCORE  INSTANCES WEIGHT GOAL   AT LEAST PER INSTANCE AUTO BIN MAX PRINT MISSING COMMENT NAME                          
+100.00 100.00    1      100    1        1            64           64                    i2c_pkg::i2c_coverage::i2c_cg 
+
+
+
+-------------------------------------------------------------------------------
+
+Summary for Group Instance   tb_i2c.me.obj.i2c_cg
+
+
+
+CATEGORY  EXPECTED UNCOVERED COVERED PERCENT 
+Variables 15       0         15      100.00  
+Crosses   10       0         10      100.00  
+
+
+Variables for Group Instance  tb_i2c.me.obj.i2c_cg
+
+
+VARIABLE         EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST AUTO BIN MAX COMMENT 
+cp_op            2        0         2       100.00  100  1      1        0                    
+cp_slave_addr    1        0         1       100.00  100  1      1        0                    
+cp_write_data    5        0         5       100.00  100  1      1        0                    
+cp_slave_tx_data 5        0         5       100.00  100  1      1        0                    
+cp_ack           2        0         2       100.00  100  1      1        0                    
+
+
+Crosses for Group Instance  tb_i2c.me.obj.i2c_cg
+
+
+CROSS                 EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST PRINT MISSING COMMENT 
+cross_write_addr_data 5        0         5       100.00  100  1      1        0                     
+cross_read_addr_data  5        0         5       100.00  100  1      1        0                     
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_op
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 2        0         2       100.00  
+
+
+User Defined Bins for cp_op
+
+
+Bins
+
+NAME  COUNT AT LEAST 
+read  5722  1        
+write 5418  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_slave_addr
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 1        0         1       100.00  
+
+
+User Defined Bins for cp_slave_addr
+
+
+Excluded/Illegal bins
+
+NAME       COUNT STATUS   
+other_addr 3691  Excluded 
+
+
+Covered bins
+
+NAME        COUNT AT LEAST 
+target_addr 7449  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_write_data
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 5        0         5       100.00  
+
+
+User Defined Bins for cp_write_data
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+misc 5324  Excluded 
+
+
+Covered bins
+
+NAME COUNT AT LEAST 
+x3c  19    1        
+x55  21    1        
+aa   19    1        
+ff   18    1        
+zero 17    1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_slave_tx_data
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 5        0         5       100.00  
+
+
+User Defined Bins for cp_slave_tx_data
+
+
+Excluded/Illegal bins
+
+NAME COUNT STATUS   
+misc 5613  Excluded 
+
+
+Covered bins
+
+NAME COUNT AT LEAST 
+x5a  19    1        
+c3   19    1        
+a5   23    1        
+ff   20    1        
+zero 28    1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_ack
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 2        0         2       100.00  
+
+
+User Defined Bins for cp_ack
+
+
+Bins
+
+NAME COUNT AT LEAST 
+nack 3691  1        
+ack  7449  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cross_write_addr_data
+
+
+Samples crossed: cp_op cp_slave_addr cp_write_data
+CATEGORY                           EXPECTED UNCOVERED COVERED PERCENT MISSING 
+TOTAL                              5        0         5       100.00          
+Automatically Generated Cross Bins 5        0         5       100.00          
+User Defined Cross Bins            0        0         0                       
+
+
+Automatically Generated Cross Bins for cross_write_addr_data
+
+
+Bins
+
+cp_op cp_slave_addr cp_write_data COUNT AT LEAST 
+write target_addr   x3c           11    1        
+write target_addr   x55           12    1        
+write target_addr   aa            13    1        
+write target_addr   ff            8     1        
+write target_addr   zero          10    1        
+
+
+User Defined Cross Bins for cross_write_addr_data
+
+
+Excluded/Illegal bins
+
+NAME      COUNT STATUS   
+not_write 0     Excluded 
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cross_read_addr_data
+
+
+Samples crossed: cp_op cp_slave_addr cp_slave_tx_data
+CATEGORY                           EXPECTED UNCOVERED COVERED PERCENT MISSING 
+TOTAL                              5        0         5       100.00          
+Automatically Generated Cross Bins 5        0         5       100.00          
+User Defined Cross Bins            0        0         0                       
+
+
+Automatically Generated Cross Bins for cross_read_addr_data
+
+
+Bins
+
+cp_op cp_slave_addr cp_slave_tx_data COUNT AT LEAST 
+read  target_addr   x5a              11    1        
+read  target_addr   c3               9     1        
+read  target_addr   a5               15    1        
+read  target_addr   ff               15    1        
+read  target_addr   zero             15    1        
+
+
+User Defined Cross Bins for cross_read_addr_data
+
+
+Excluded/Illegal bins
+
+NAME     COUNT STATUS   
+not_read 0     Excluded 
+
+

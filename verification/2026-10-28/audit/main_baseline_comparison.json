@@ -1,0 +1,327 @@
+[
+  {
+    "project": "spi",
+    "file": "rtl/spi_master.sv",
+    "sha256": "516e174834c09d36c9ba35799832bc03910e493dba174a0d9ccbbf61d4af1e4f",
+    "git_blob_sha": "c8233a9a18be8d1678f486d6ebcfef2766a9262a",
+    "main_identical_paths": [
+      "spi/rtl/spi_master.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "spi",
+    "file": "rtl/spi_master_slave_top.sv",
+    "sha256": "06eaaf09e0a5cc03ea425ba31462144ea74e88b23ac869c4d19f3cc05757a235",
+    "git_blob_sha": "e4429d33c91dad0f3096778632d62e8ce356d784",
+    "main_identical_paths": [
+      "spi/rtl/spi_master_slave_top.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "spi",
+    "file": "rtl/spi_slave.sv",
+    "sha256": "e1a4d3622cfa53e4f034d90aaecb88afdc52b39210275f775aeff75b86a2b19c",
+    "git_blob_sha": "85c1abf9e84e78a3dc716e0a81129020bb3c3d52",
+    "main_identical_paths": [
+      "fpga/shared_rtl/spi_slave.sv",
+      "spi/rtl/spi_slave.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "spi",
+    "file": "tb/spi_agent.sv",
+    "sha256": "12fa009853f06c9d28398028088c76278a01b8f7de8b3d8ecae1669a8d26b446",
+    "git_blob_sha": "1ca8e6551542389b14c23a6d60124af9883dde54",
+    "main_identical_paths": [
+      "spi/tb/spi_agent.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "spi",
+    "file": "tb/spi_coverage.sv",
+    "sha256": "585b4214e0c715406feb2dafb42b471a7a948eacd226ff457c6636de6a09e967",
+    "git_blob_sha": "eefdde2e70d45ea83b244b5e9d5f0eaa755e7078",
+    "main_identical_paths": [
+      "spi/tb/spi_coverage.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "spi",
+    "file": "tb/spi_driver.sv",
+    "sha256": "f33a5c74e5e93271eede266247d0917ddf1842338184be2dbb68d28d27e3524d",
+    "git_blob_sha": "817941df7c054fec74f7a469f911599f8d617cb1",
+    "main_identical_paths": [
+      "spi/tb/spi_driver.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "spi",
+    "file": "tb/spi_env.sv",
+    "sha256": "065134535a3f403678497c27a7dad2250690cee27da884bab6430acc611c085a",
+    "git_blob_sha": "58070447eb863835fbedd9dc6593e5f36716eb37",
+    "main_identical_paths": [
+      "spi/tb/spi_env.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "spi",
+    "file": "tb/spi_if.sv",
+    "sha256": "4efdde14a0c69dbbc32383c5a8334da6ecd3493e8e45ee743777fa34de8995ed",
+    "git_blob_sha": "d22d80f2840a0bde3cb86064413985396469472c",
+    "main_identical_paths": [
+      "spi/tb/spi_if.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "spi",
+    "file": "tb/spi_monitor.sv",
+    "sha256": "759d3974e51f4384958e7b93040f95ab678710f6be7445587e36d67f64888429",
+    "git_blob_sha": "a85792933b36fd6dbbf03dd6226b8a8a3c60a2dc",
+    "main_identical_paths": [
+      "spi/tb/spi_monitor.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "spi",
+    "file": "tb/spi_pkg.sv",
+    "sha256": "53c2b56830ec5aafa2670c5d455982f9b8d59226d42c212025548113f3c43101",
+    "git_blob_sha": "64e302abb22baacff756c8b60d5635a1a615151e",
+    "main_identical_paths": [
+      "spi/tb/spi_pkg.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "spi",
+    "file": "tb/spi_scoreboard.sv",
+    "sha256": "3a3ae4500f3b89030210e7e47251f597d159485ebaebb9e354843fb33ca7f76f",
+    "git_blob_sha": "11c303bd7e24795c397cd5bce8fe65f3f8d12f48",
+    "main_identical_paths": [
+      "spi/tb/spi_scoreboard.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "spi",
+    "file": "tb/spi_seq_item.sv",
+    "sha256": "31c4a978bbee9addd88aec19f3a36eae41f79c035cc9ee41e7d6e153e49715b2",
+    "git_blob_sha": "3f09310763a0a62cb9a18c8c491aedbf7670b545",
+    "main_identical_paths": [
+      "spi/tb/spi_seq_item.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "spi",
+    "file": "tb/spi_sequence.sv",
+    "sha256": "106420fb1680d1664bfc7b64f90e3c2f1645afc6c06a8baac9fdd03c41bba0df",
+    "git_blob_sha": "deb298d1285e914a689dd50b22f9da2af770bf31",
+    "main_identical_paths": [
+      "spi/tb/spi_sequence.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "spi",
+    "file": "tb/spi_test.sv",
+    "sha256": "3cabde5cccf5802d4601e868cd69e2588bfb12320634c6857ee9d268ff6b4009",
+    "git_blob_sha": "09ed3d1fafaab64ebb01976931f92410d34ced8d",
+    "main_identical_paths": [
+      "spi/tb/spi_test.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "spi",
+    "file": "tb/tb_spi.sv",
+    "sha256": "6a11ccc0f8af3df0be1800f49e806c7493b997f8d0240dbba38e3ac777fa9469",
+    "git_blob_sha": "50cf8baa818e090acf07749ac72fadebd84846fc",
+    "main_identical_paths": [
+      "spi/tb/tb_spi.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "spi",
+    "file": "tb/templates.sv",
+    "sha256": "b335f31e56cdd5531a89f1babb808e3d3bd70f7c134b70f916af606407f490d9",
+    "git_blob_sha": "9087af023412284ff1a0d2e6aa48ff5543cafdbd",
+    "main_identical_paths": [
+      "i2c/tb/templates.sv",
+      "spi/tb/templates.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "i2c",
+    "file": "rtl/i2c_master.sv",
+    "sha256": "3d6ab73d3ad334ae19fc69028952466bbe48f25f91079b6c21f85fc230fa9b56",
+    "git_blob_sha": "d76a6715b51b8a9b1e734fd1cf4df43a5fe01d85",
+    "main_identical_paths": [
+      "i2c/rtl/i2c_master.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "i2c",
+    "file": "rtl/i2c_master_slave_top.sv",
+    "sha256": "6951e7afc8c1616c50ed9f35cedf1934d39e542e506737b795e214dd6feba947",
+    "git_blob_sha": "9fd07ac7c21268b9d26a42bbd1dc74b87f6b87a6",
+    "main_identical_paths": [
+      "i2c/rtl/i2c_master_slave_top.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "i2c",
+    "file": "rtl/i2c_slave.sv",
+    "sha256": "a266cd77d5d7e1d1a70d0cfffcc3e0415128f4e27041b4ba9872b9f33b890a2c",
+    "git_blob_sha": "ed07c95b529d5ec96802b754b993da022f8bafad",
+    "main_identical_paths": [
+      "fpga/shared_rtl/i2c_slave.sv",
+      "fpga/slave/rtl/i2c_slave.sv",
+      "i2c/rtl/i2c_slave.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "i2c",
+    "file": "tb/i2c_agent.sv",
+    "sha256": "64675587c665a5234db401cd86f2106da6d83e7f68d09165eb7b51d8a8ebc177",
+    "git_blob_sha": "e73b53d49e08780dbcb3298bc53e2d6da929b96e",
+    "main_identical_paths": [
+      "i2c/tb/i2c_agent.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "i2c",
+    "file": "tb/i2c_coverage.sv",
+    "sha256": "fcbd1aff7654fd0d7aa2e75840e1a7ff59f34239a6f3b5d6e15a8975b3c3b70e",
+    "git_blob_sha": "812365b307ab3cddd6188fbfaf1390fa166b08ba",
+    "main_identical_paths": [
+      "i2c/tb/i2c_coverage.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "i2c",
+    "file": "tb/i2c_driver.sv",
+    "sha256": "ab1982cf9dbfe3192ea3a1aa83b115e7bbe0cfa4f60f89098ef32b95088ba92b",
+    "git_blob_sha": "4fa1b910c0b7ed4149d9c0f6b8ae64acdc8f6b7f",
+    "main_identical_paths": [
+      "i2c/tb/i2c_driver.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "i2c",
+    "file": "tb/i2c_env.sv",
+    "sha256": "0785f7204d1415ca15e604feafc80a5edaba209a76e692243b5640a57623b14b",
+    "git_blob_sha": "ebbe1b18b92910c3ef76aca41d55e547f1d7a4bd",
+    "main_identical_paths": [
+      "i2c/tb/i2c_env.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "i2c",
+    "file": "tb/i2c_if.sv",
+    "sha256": "6eddd30c455cee183d8f8b102ed3022a9dd048fed8ddf28f9263b1a9a529b0be",
+    "git_blob_sha": "4d8296e53173959f4c5a3b22dd162bf639bf8a8a",
+    "main_identical_paths": [
+      "i2c/tb/i2c_if.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "i2c",
+    "file": "tb/i2c_monitor.sv",
+    "sha256": "1452c06ab5a5eea3da8ffde550b3c3484653e9a87a12e4cdbb5951c1b0932a2c",
+    "git_blob_sha": "71c756761a4f77d09f4115d9f901d7bd17bf58e7",
+    "main_identical_paths": [
+      "i2c/tb/i2c_monitor.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "i2c",
+    "file": "tb/i2c_pkg.sv",
+    "sha256": "88add716f5441df7972feea9ae895adcc48349e562973a0b8de343f14d377544",
+    "git_blob_sha": "d230c0f471d7ef59ec045a45508b643bb29f714e",
+    "main_identical_paths": [
+      "i2c/tb/i2c_pkg.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "i2c",
+    "file": "tb/i2c_scoreboard.sv",
+    "sha256": "b82fb7d8c502d58bb8a1c9e1bd5961724252c11c34abd9770b8c4b0cb863ff83",
+    "git_blob_sha": "4f81787cc6dd531b7c8271cf8f0257c1838dccc7",
+    "main_identical_paths": [
+      "i2c/tb/i2c_scoreboard.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "i2c",
+    "file": "tb/i2c_seq_item.sv",
+    "sha256": "f5d308ef1cf08ea8042edee1944bc1d739652936cd431323ed675f87316b402a",
+    "git_blob_sha": "5e84d54dfd9e3eaf880827b4caa544b98ebb2024",
+    "main_identical_paths": [
+      "i2c/tb/i2c_seq_item.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "i2c",
+    "file": "tb/i2c_sequence.sv",
+    "sha256": "8ae53c1543a1dcc7be10d921e0ad07e22594b9c2ab9dba1350b63e985b7d3cb0",
+    "git_blob_sha": "5e3aa1e92e1eb9af361879e752ee04b5a920dbdc",
+    "main_identical_paths": [
+      "i2c/tb/i2c_sequence.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "i2c",
+    "file": "tb/i2c_test.sv",
+    "sha256": "61410f7f5d60cb7addbb84dd9ba4792bcf26fbfbe83c4b95a3bd1303d31a7fa8",
+    "git_blob_sha": "19b844dae77f6ad2f189088dbce1614909a4a4e6",
+    "main_identical_paths": [
+      "i2c/tb/i2c_test.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "i2c",
+    "file": "tb/tb_i2c.sv",
+    "sha256": "128649561a74d36b51803a724d6268deedf54b2ccb03791054cc82ade32ed864",
+    "git_blob_sha": "52aa6b61ccec138f17207d524e919f4319c6ffa1",
+    "main_identical_paths": [
+      "i2c/tb/tb_i2c.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  },
+  {
+    "project": "i2c",
+    "file": "tb/templates.sv",
+    "sha256": "b335f31e56cdd5531a89f1babb808e3d3bd70f7c134b70f916af606407f490d9",
+    "git_blob_sha": "9087af023412284ff1a0d2e6aa48ff5543cafdbd",
+    "main_identical_paths": [
+      "i2c/tb/templates.sv",
+      "spi/tb/templates.sv"
+    ],
+    "status": "MATCH_MAIN_BLOB"
+  }
+]

@@ -1,0 +1,15 @@
+Design Module List
+
+Total Module Definition Coverage Summary 
+SCORE   LINE            COND          TOGGLE          FSM         BRANCH       
+ 99.60  100.00 133/133  100.00 25/25   97.98 582/594  100.00 6/6  100.00 29/29 
+
+
+Total modules in report: 4
+-------------------------------------------------------------------------------
+SCORE   LINE           COND           TOGGLE          FSM            BRANCH         NAME                 
+ 98.18  --     --      --     --       98.18 108/110  --     --      --     --      spi_master_slave_top 
+ 99.26  100.00 78/78   100.00 13/13    96.32 262/272  100.00 6/6     100.00 15/15   spi_master           
+100.00  100.00 55/55   100.00 12/12   100.00 212/212  --     --      100.00 14/14   spi_slave            
+--      --     --      --     --      --     --       --     --      --     --      tb_spi               
+

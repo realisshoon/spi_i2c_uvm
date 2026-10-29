@@ -1,0 +1,48 @@
+--- baseline/tb/spi_coverage.sv
++++ followup/tb/spi_coverage.sv
+@@ -7,6 +7,12 @@
+     logic       cov_m2s_match;
+     logic       cov_s2m_match;
+ 
++    int ext_divider; bit ext_busy;
++    covergroup enhanced_cg;
++      option.per_instance=1;
++      divider:coverpoint ext_divider {bins min_sync={4};bins next={5};bins legacy={20};bins max={255};}
++      master_walk:coverpoint cov_master_tx_data {bins onehot[]={1,2,4,8,16,32,64,128};bins zerohot[]={254,253,251,247,239,223,191,127};}
++    endgroup
+     covergroup spi_cg;
+         option.per_instance = 1;
+ 
+@@ -40,7 +46,7 @@
+ 
+     function new(string name = "spi_coverage", uvm_component parent);
+         super.new(name, parent);
+-        spi_cg = new();
++        spi_cg = new(); enhanced_cg=new();
+     endfunction
+ 
+     virtual function void write(spi_seq_item t);
+@@ -51,7 +57,7 @@
+         cov_m2s_match = (t.slave_rx_data === t.master_tx_data);
+         cov_s2m_match = (t.master_rx_data === t.slave_tx_data);
+ 
+-        spi_cg.sample();
++        spi_cg.sample(); ext_divider=t.divider; enhanced_cg.sample();
+ 
+         `uvm_info("COV", $sformatf(
+                   "Sample coverage: master_tx=0x%02h slave_tx=0x%02h m2s_match=%0d s2m_match=%0d coverage=%0.2f%%",
+@@ -60,12 +66,13 @@
+                   cov_m2s_match,
+                   cov_s2m_match,
+                   spi_cg.get_inst_coverage()
+-                  ), UVM_LOW)
++                  ), UVM_HIGH)
+ 
+     endfunction
+ 
+     virtual function void report_phase(uvm_phase phase);
+         super.report_phase(phase);
++        `uvm_info("EXT_COV",$sformatf("SPI enhanced coverage=%0.2f",enhanced_cg.get_inst_coverage()),UVM_NONE)
+ 
+         `uvm_info("COV", $sformatf(
+                   "Final SPI functional coverage = %0.2f%%", spi_cg.get_inst_coverage()), UVM_NONE)

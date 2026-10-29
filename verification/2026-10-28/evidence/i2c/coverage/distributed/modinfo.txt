@@ -1,0 +1,1963 @@
+===============================================================================
+Module : i2c_slave_simple
+===============================================================================
+SCORE   LINE            COND          TOGGLE          FSM           BRANCH       
+ 88.02   97.06 132/136   96.67 29/30   97.69 254/260   52.00 13/25   96.67 29/30 
+
+Source File(s) : 
+
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/i2c/rtl/i2c_slave.sv
+
+Module self-instances :
+
+SCORE   LINE            COND          TOGGLE          FSM           BRANCH        NAME                                          
+ 88.02   97.06 132/136   96.67 29/30   97.69 254/260   52.00 13/25   96.67 29/30  tb_i2c.dut.u_i2c_slave_top.u_i2c_slave_simple 
+
+
+
+-------------------------------------------------------------------------------
+Line Coverage for Module : i2c_slave_simple
+
+             Line No.   Total   Covered  Percent
+TOTAL                      136      132    97.06
+ALWAYS            151      105      101    96.19
+ALWAYS            368       31       31   100.00
+
+150                         always_comb begin
+151        1/1                  n_state         = c_state;
+152                     
+153                             // synchronizer next
+154        1/1                  n_scl_sync      = {c_scl_sync[1:0], scl};
+155        1/1                  n_sda_sync      = {c_sda_sync[1:0], sda_i};
+156                     
+157        1/1                  n_shift_reg     = c_shift_reg;
+158        1/1                  n_tx_shift_reg  = c_tx_shift_reg;
+159        1/1                  n_bit_cnt       = c_bit_cnt;
+160                     
+161        1/1                  n_rx_data       = c_rx_data;
+162        1/1                  n_rx_done       = 1'b0;
+163        1/1                  n_tx_done       = 1'b0;
+164                     
+165        1/1                  n_addr_match    = c_addr_match;
+166        1/1                  n_addr_ok       = c_addr_ok;
+167        1/1                  n_rw_mode       = c_rw_mode;
+168        1/1                  n_master_ack    = c_master_ack;
+169        1/1                  n_busy          = c_busy;
+170                     
+171        1/1                  n_sda_drive_low = c_sda_drive_low;
+172                     
+173                             // STOP은 어느 상태에서든 버스 종료
+174        1/1                  if (stop_cond) begin
+175        1/1                      n_state         = IDLE;
+176        1/1                      n_shift_reg     = 8'd0;
+177        1/1                      n_tx_shift_reg  = 8'd0;
+178        1/1                      n_bit_cnt       = 3'd0;
+179                     
+180        1/1                      n_addr_match    = 1'b0;
+181        1/1                      n_addr_ok       = 1'b0;
+182        1/1                      n_rw_mode       = 1'b0;
+183        1/1                      n_busy          = 1'b0;
+184                     
+185        1/1                      n_sda_drive_low = 1'b0;  // release
+186                             end  // START 또는 repeated START
+187        1/1                  else if (start_cond) begin
+188        1/1                      n_state         = ADDR;
+189        1/1                      n_shift_reg     = 8'd0;
+190        1/1                      n_tx_shift_reg  = 8'd0;
+191        1/1                      n_bit_cnt       = 3'd0;
+192                     
+193        1/1                      n_addr_match    = 1'b0;
+194        1/1                      n_addr_ok       = 1'b0;
+195        1/1                      n_rw_mode       = 1'b0;
+196        1/1                      n_busy          = 1'b1;
+197                     
+198        1/1                      n_sda_drive_low = 1'b0;  // release
+199                             end else begin
+200        1/1                      case (c_state)
+201                     
+202                                     IDLE: begin
+203        1/1                              n_busy          = 1'b0;
+204        1/1                              n_sda_drive_low = 1'b0;
+205                                     end
+206                     
+207                                     // 1. Address byte 수신
+208                                     ADDR: begin
+209        1/1                              if (scl_rise) begin
+210        1/1                                  n_shift_reg = sample_byte;
+211                     
+212        1/1                                  if (c_bit_cnt == 3'd7) begin
+213        1/1                                      n_bit_cnt = 3'd0;
+214                     
+215                                                 // sample_byte[7:1] = address
+216                                                 // sample_byte[0]   = R/W, 0: write, 1: read
+217        1/1                                      if (sample_byte[7:1] == SLAVE_ADDR) begin
+218        1/1                                          n_addr_ok    = 1'b1;
+219        1/1                                          n_addr_match = 1'b1;
+220        1/1                                          n_rw_mode    = sample_byte[0];
+221                                                 end else begin
+222        1/1                                          n_addr_ok    = 1'b0;
+223        1/1                                          n_addr_match = 1'b0;
+224        1/1                                          n_rw_mode    = sample_byte[0];
+225                                                 end
+226                     
+227        1/1                                      n_state = ADDR_ACK_WAIT_FALL;
+228                                             end else begin
+229        1/1                                      n_bit_cnt = c_bit_cnt + 1'b1;
+230                                             end
+231                                         end
+                        MISSING_ELSE
+232                                     end
+233                     
+234                                     // 2. Address ACK 준비
+235                                     ADDR_ACK_WAIT_FALL: begin
+236                                         // 8번째 address bit 이후 SCL falling에서 ACK 준비
+237        1/1                              if (scl_fall) begin
+238        1/1                                  if (c_addr_ok) begin
+239        1/1                                      n_sda_drive_low = 1'b1;  // ACK = SDA Low
+240                                             end else begin
+241        1/1                                      n_sda_drive_low = 1'b0;  // NACK = release
+242                                             end
+243                     
+244        1/1                                  n_state = ADDR_ACK_HOLD;
+245                                         end
+                        MISSING_ELSE
+246                                     end
+247                     
+248                                     // 3. Address ACK 유지 후 write/read 분기
+249                                     ADDR_ACK_HOLD: begin
+250                                         // 9번째 ACK clock이 끝나는 falling edge에서 release
+251        1/1                              if (scl_fall) begin
+252        1/1                                  n_sda_drive_low = 1'b0;
+253        1/1                                  n_shift_reg     = 8'd0;
+254        1/1                                  n_bit_cnt       = 3'd0;
+255                     
+256        1/1                                  if (!c_addr_ok) begin
+257        1/1                                      n_state = IDLE;
+258        1/1                                      n_busy  = 1'b0;
+259        1/1                                  end else if (c_rw_mode == 1'b0) begin
+260                                                 // Write transaction
+261        1/1                                      n_state = WRITE_DATA;
+262                                             end else begin
+263                                                 // Read transaction
+264        1/1                                      n_tx_shift_reg = tx_data;
+265                     
+266                                                 // 첫 bit를 다음 SCL rising 전에 준비
+267                                                 // tx bit가 0이면 drive low, 1이면 release
+268        1/1                                      n_sda_drive_low = ~tx_data[7];
+269                     
+270        1/1                                      n_state = READ_DATA;
+271                                             end
+272                                         end
+                        MISSING_ELSE
+273                                     end
+274                     
+275                                     // 4. Write data byte 수신
+276                                     WRITE_DATA: begin
+277        1/1                              if (scl_rise) begin
+278        1/1                                  n_shift_reg = sample_byte;
+279                     
+280        1/1                                  if (c_bit_cnt == 3'd7) begin
+281        1/1                                      n_bit_cnt = 3'd0;
+282        1/1                                      n_rx_data = sample_byte;
+283        1/1                                      n_rx_done = 1'b1;
+284        1/1                                      n_state   = WRITE_DATA_ACK_WAIT_FALL;
+285                                             end else begin
+286        1/1                                      n_bit_cnt = c_bit_cnt + 1'b1;
+287                                             end
+288                                         end
+                        MISSING_ELSE
+289                                     end
+290                     
+291                                     // 5. Write data ACK 준비
+292                                     WRITE_DATA_ACK_WAIT_FALL: begin
+293        1/1                              if (scl_fall) begin
+294        1/1                                  n_sda_drive_low = 1'b1;  // ACK
+295        1/1                                  n_state         = WRITE_DATA_ACK_HOLD;
+296                                         end
+                        MISSING_ELSE
+297                                     end
+298                     
+299                                     // 6. Write data ACK 유지 후 다음 byte 대기
+300                                     WRITE_DATA_ACK_HOLD: begin
+301        1/1                              if (scl_fall) begin
+302        1/1                                  n_sda_drive_low = 1'b0;  // release
+303        1/1                                  n_shift_reg     = 8'd0;
+304        1/1                                  n_bit_cnt       = 3'd0;
+305                     
+306                                             // STOP 전까지 다음 data byte도 받을 수 있음
+307        1/1                                  n_state         = WRITE_DATA;
+308                                         end
+                        MISSING_ELSE
+309                                     end
+310                     
+311                                     // 7. Read data byte 송신
+312                                     READ_DATA: begin
+313                                         // Slave는 이미 SDA에 현재 bit를 올려둔 상태
+314                                         // Master가 SCL High에서 sample한 뒤,
+315                                         // SCL falling에서 다음 bit를 준비한다.
+316        1/1                              if (scl_fall) begin
+317        1/1                                  if (c_bit_cnt == 3'd7) begin
+318                                                 // bit0까지 전송 완료.
+319                                                 // 다음 9번째 clock은 Master ACK/NACK이므로 SDA release
+320        1/1                                      n_bit_cnt       = 3'd0;
+321        1/1                                      n_sda_drive_low = 1'b0;  // release
+322        1/1                                      n_tx_done       = 1'b1;
+323        1/1                                      n_state         = READ_MASTER_ACK;
+324                                             end else begin
+325                                                 // 다음 bit 준비
+326        1/1                                      n_tx_shift_reg  = {c_tx_shift_reg[6:0], 1'b0};
+327        1/1                                      n_bit_cnt       = c_bit_cnt + 1'b1;
+328                     
+329                                                 // shift 후 다음 bit는 기존 c_tx_shift_reg[6]
+330        1/1                                      n_sda_drive_low = ~c_tx_shift_reg[6];
+331                                             end
+332                                         end
+                        MISSING_ELSE
+333                                     end
+334                     
+335                                     // 8. Read 후 Master ACK/NACK 확인
+336                                     READ_MASTER_ACK: begin
+337                                         // 9번째 clock에서 Master가 ACK/NACK을 SDA에 출력
+338                                         // ACK=0이면 계속 읽기, NACK=1이면 종료 대기
+339        1/1                              if (scl_rise) begin
+340        1/1                                  n_master_ack = sda_sample;
+341                     
+342        1/1                                  if (sda_sample == 1'b0) begin
+343                                                 // Master ACK: 다음 byte 전송 가능
+344                                                 // 여기서는 단순히 같은 tx_data를 다시 전송하도록 구성
+345        0/1     ==>                              n_tx_shift_reg  = tx_data;
+346        0/1     ==>                              n_bit_cnt       = 3'd0;
+347        0/1     ==>                              n_sda_drive_low = ~tx_data[7];
+348        0/1     ==>                              n_state         = READ_DATA;
+349                                             end else begin
+350                                                 // Master NACK: 더 이상 read 안 함
+351        1/1                                      n_sda_drive_low = 1'b0;
+352        1/1                                      n_state         = IDLE;
+353        1/1                                      n_busy          = 1'b0;
+354                                             end
+355                                         end
+                        MISSING_ELSE
+356                                     end
+357                     
+358                                     default: begin
+359        1/1                              n_state         = IDLE;
+360        1/1                              n_sda_drive_low = 1'b0;
+361                                     end
+362                     
+363                                 endcase
+364                             end
+365                         end
+366                     
+367                         always_ff @(posedge clk or posedge rst) begin
+368        1/1                  if (rst) begin
+369        1/1                      c_state         <= IDLE;
+370                     
+371        1/1                      c_scl_sync      <= 3'b111;
+372        1/1                      c_sda_sync      <= 3'b111;
+373                     
+374        1/1                      c_shift_reg     <= 8'd0;
+375        1/1                      c_tx_shift_reg  <= 8'd0;
+376        1/1                      c_bit_cnt       <= 3'd0;
+377                     
+378        1/1                      c_rx_data       <= 8'd0;
+379        1/1                      c_rx_done       <= 1'b0;
+380        1/1                      c_tx_done       <= 1'b0;
+381                     
+382        1/1                      c_addr_match    <= 1'b0;
+383        1/1                      c_addr_ok       <= 1'b0;
+384        1/1                      c_rw_mode       <= 1'b0;
+385        1/1                      c_master_ack    <= 1'b1;
+386        1/1                      c_busy          <= 1'b0;
+387                     
+388        1/1                      c_sda_drive_low <= 1'b0;
+389                             end else begin
+390        1/1                      c_state         <= n_state;
+391                     
+392        1/1                      c_scl_sync      <= n_scl_sync;
+393        1/1                      c_sda_sync      <= n_sda_sync;
+394                     
+395        1/1                      c_shift_reg     <= n_shift_reg;
+396        1/1                      c_tx_shift_reg  <= n_tx_shift_reg;
+397        1/1                      c_bit_cnt       <= n_bit_cnt;
+398                     
+399        1/1                      c_rx_data       <= n_rx_data;
+400        1/1                      c_rx_done       <= n_rx_done;
+401        1/1                      c_tx_done       <= n_tx_done;
+402                     
+403        1/1                      c_addr_match    <= n_addr_match;
+404        1/1                      c_addr_ok       <= n_addr_ok;
+405        1/1                      c_rw_mode       <= n_rw_mode;
+406        1/1                      c_master_ack    <= n_master_ack;
+407        1/1                      c_busy          <= n_busy;
+408                     
+409        1/1                      c_sda_drive_low <= n_sda_drive_low;
+
+-------------------------------------------------------------------------------
+Cond Coverage for Module : i2c_slave_simple
+
+               Total   Covered  Percent
+Conditions         30       29    96.67
+Logical            30       29    96.67
+Non-Logical         0        0
+Event               0        0
+
+ LINE       212
+ EXPRESSION (c_bit_cnt == 3'd7)
+            ---------1---------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       217
+ EXPRESSION (sample_byte[7:1] == SLAVE_ADDR)
+            ----------------1---------------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       259
+ EXPRESSION (c_rw_mode == 1'b0)
+            ---------1---------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       280
+ EXPRESSION (c_bit_cnt == 3'd7)
+            ---------1---------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       317
+ EXPRESSION (c_bit_cnt == 3'd7)
+            ---------1---------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       342
+ EXPRESSION (sda_sample == 1'b0)
+            ----------1---------
+
+-1- Status
+ 0  Covered
+ 1  Not Covered
+
+ LINE       128
+ EXPRESSION (c_scl_sync[2:1] == 2'b1)
+            ------------1------------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       129
+ EXPRESSION (c_scl_sync[2:1] == 2'b10)
+            -------------1------------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       133
+ EXPRESSION ((c_sda_sync[2:1] == 2'b10) && (c_scl_sync[1] == 1'b1))
+             -------------1------------    -----------2-----------
+
+-1- -2- Status
+ 0   1  Covered
+ 1   0  Covered
+ 1   1  Covered
+
+ LINE       133
+ SUB-EXPRESSION (c_sda_sync[2:1] == 2'b10)
+                -------------1------------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       133
+ SUB-EXPRESSION (c_scl_sync[1] == 1'b1)
+                -----------1-----------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       134
+ EXPRESSION ((c_sda_sync[2:1] == 2'b1) && (c_scl_sync[1] == 1'b1))
+             ------------1------------    -----------2-----------
+
+-1- -2- Status
+ 0   1  Covered
+ 1   0  Covered
+ 1   1  Covered
+
+ LINE       134
+ SUB-EXPRESSION (c_sda_sync[2:1] == 2'b1)
+                ------------1------------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       134
+ SUB-EXPRESSION (c_scl_sync[1] == 1'b1)
+                -----------1-----------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+-------------------------------------------------------------------------------
+Toggle Coverage for Module : i2c_slave_simple
+                Total Covered Percent 
+Totals          49    46      93.88   
+Total Bits      260   254     97.69   
+Total Bits 0->1 130   127     97.69   
+Total Bits 1->0 130   127     97.69   
+
+                            
+Ports          13 12 92.31  
+Port Bits      54 52 96.30  
+Port Bits 0->1 27 26 96.30  
+Port Bits 1->0 27 26 96.30  
+
+                                
+Signals          36  34  94.44  
+Signal Bits      206 202 98.06  
+Signal Bits 0->1 103 101 98.06  
+Signal Bits 1->0 103 101 98.06  
+
+Port Details
+              Toggle Toggle 1->0 Toggle 0->1 Direction 
+clk           Yes    Yes         Yes         INPUT     
+rst           Yes    Yes         Yes         INPUT     
+scl           Yes    Yes         Yes         INPUT     
+sda_i         Yes    Yes         Yes         INPUT     
+sda_drive_low Yes    Yes         Yes         OUTPUT    
+tx_data[7:0]  Yes    Yes         Yes         INPUT     
+rx_data[7:0]  Yes    Yes         Yes         OUTPUT    
+rx_done       Yes    Yes         Yes         OUTPUT    
+tx_done       Yes    Yes         Yes         OUTPUT    
+addr_match    Yes    Yes         Yes         OUTPUT    
+rw_mode       Yes    Yes         Yes         OUTPUT    
+master_ack    No     No          No          OUTPUT    
+busy          Yes    Yes         Yes         OUTPUT    
+
+Signal Details
+                    Toggle Toggle 1->0 Toggle 0->1 
+c_state[3:0]        Yes    Yes         Yes         
+n_state[3:0]        Yes    Yes         Yes         
+c_scl_sync[2:0]     Yes    Yes         Yes         
+n_scl_sync[2:0]     Yes    Yes         Yes         
+c_sda_sync[2:0]     Yes    Yes         Yes         
+n_sda_sync[2:0]     Yes    Yes         Yes         
+scl_rise            Yes    Yes         Yes         
+scl_fall            Yes    Yes         Yes         
+start_cond          Yes    Yes         Yes         
+stop_cond           Yes    Yes         Yes         
+sda_sample          Yes    Yes         Yes         
+c_shift_reg[7:0]    Yes    Yes         Yes         
+n_shift_reg[7:0]    Yes    Yes         Yes         
+c_tx_shift_reg[7:0] Yes    Yes         Yes         
+n_tx_shift_reg[7:0] Yes    Yes         Yes         
+c_bit_cnt[2:0]      Yes    Yes         Yes         
+n_bit_cnt[2:0]      Yes    Yes         Yes         
+c_rx_data[7:0]      Yes    Yes         Yes         
+n_rx_data[7:0]      Yes    Yes         Yes         
+c_rx_done           Yes    Yes         Yes         
+n_rx_done           Yes    Yes         Yes         
+c_tx_done           Yes    Yes         Yes         
+n_tx_done           Yes    Yes         Yes         
+c_addr_match        Yes    Yes         Yes         
+n_addr_match        Yes    Yes         Yes         
+c_addr_ok           Yes    Yes         Yes         
+n_addr_ok           Yes    Yes         Yes         
+c_rw_mode           Yes    Yes         Yes         
+n_rw_mode           Yes    Yes         Yes         
+c_master_ack        No     No          No          
+n_master_ack        No     No          No          
+c_busy              Yes    Yes         Yes         
+n_busy              Yes    Yes         Yes         
+c_sda_drive_low     Yes    Yes         Yes         
+n_sda_drive_low     Yes    Yes         Yes         
+sample_byte[7:0]    Yes    Yes         Yes         
+
+
+-------------------------------------------------------------------------------
+FSM Coverage for Module : i2c_slave_simple
+Summary for FSM :: c_state
+            Total Covered Percent                         
+States      9     9       100.00  (Not included in score) 
+Transitions 25    13      52.00                           
+Sequences   0     0                                       
+
+State, Transition and Sequence Details for FSM :: c_state
+-------------------------------------------------------------------------------
+states                   Line No. Covered 
+ADDR                     188      Covered 
+ADDR_ACK_HOLD            244      Covered 
+ADDR_ACK_WAIT_FALL       227      Covered 
+IDLE                     369      Covered 
+READ_DATA                270      Covered 
+READ_MASTER_ACK          323      Covered 
+WRITE_DATA               261      Covered 
+WRITE_DATA_ACK_HOLD      295      Covered 
+WRITE_DATA_ACK_WAIT_FALL 284      Covered 
+
+transitions                                   Line No. Covered     
+ADDR->ADDR_ACK_WAIT_FALL                      227      Covered     
+ADDR->IDLE                                    369      Covered     
+ADDR_ACK_HOLD->ADDR                           188      Not Covered 
+ADDR_ACK_HOLD->IDLE                           369      Covered     
+ADDR_ACK_HOLD->READ_DATA                      270      Covered     
+ADDR_ACK_HOLD->WRITE_DATA                     261      Covered     
+ADDR_ACK_WAIT_FALL->ADDR                      188      Not Covered 
+ADDR_ACK_WAIT_FALL->ADDR_ACK_HOLD             244      Covered     
+ADDR_ACK_WAIT_FALL->IDLE                      369      Not Covered 
+IDLE->ADDR                                    188      Covered     
+READ_DATA->ADDR                               188      Not Covered 
+READ_DATA->IDLE                               369      Not Covered 
+READ_DATA->READ_MASTER_ACK                    323      Covered     
+READ_MASTER_ACK->ADDR                         188      Not Covered 
+READ_MASTER_ACK->IDLE                         369      Covered     
+READ_MASTER_ACK->READ_DATA                    348      Not Covered 
+WRITE_DATA->ADDR                              188      Not Covered 
+WRITE_DATA->IDLE                              369      Covered     
+WRITE_DATA->WRITE_DATA_ACK_WAIT_FALL          284      Covered     
+WRITE_DATA_ACK_HOLD->ADDR                     188      Not Covered 
+WRITE_DATA_ACK_HOLD->IDLE                     369      Not Covered 
+WRITE_DATA_ACK_HOLD->WRITE_DATA               307      Covered     
+WRITE_DATA_ACK_WAIT_FALL->ADDR                188      Not Covered 
+WRITE_DATA_ACK_WAIT_FALL->IDLE                369      Not Covered 
+WRITE_DATA_ACK_WAIT_FALL->WRITE_DATA_ACK_HOLD 295      Covered     
+
+
+-------------------------------------------------------------------------------
+Branch Coverage for Module : i2c_slave_simple
+         Line No. Total Covered Percent 
+Branches          30    29      96.67   
+IF       174      28    27      96.43   
+IF       368      2     2       100.00  
+
+
+174                if (stop_cond) begin
+                   -1-  
+175                    n_state         = IDLE;
+                       ==>
+176                    n_shift_reg     = 8'd0;
+177                    n_tx_shift_reg  = 8'd0;
+178                    n_bit_cnt       = 3'd0;
+179        
+180                    n_addr_match    = 1'b0;
+181                    n_addr_ok       = 1'b0;
+182                    n_rw_mode       = 1'b0;
+183                    n_busy          = 1'b0;
+184        
+185                    n_sda_drive_low = 1'b0;  // release
+186                end  // START 또는 repeated START
+187                else if (start_cond) begin
+                        -2-  
+188                    n_state         = ADDR;
+                       ==>
+189                    n_shift_reg     = 8'd0;
+190                    n_tx_shift_reg  = 8'd0;
+191                    n_bit_cnt       = 3'd0;
+192        
+193                    n_addr_match    = 1'b0;
+194                    n_addr_ok       = 1'b0;
+195                    n_rw_mode       = 1'b0;
+196                    n_busy          = 1'b1;
+197        
+198                    n_sda_drive_low = 1'b0;  // release
+199                end else begin
+200                    case (c_state)
+                       -3-  
+201        
+202                        IDLE: begin
+203                            n_busy          = 1'b0;
+                               ==>
+204                            n_sda_drive_low = 1'b0;
+205                        end
+206        
+207                        // 1. Address byte 수신
+208                        ADDR: begin
+209                            if (scl_rise) begin
+                               -4-  
+210                                n_shift_reg = sample_byte;
+211        
+212                                if (c_bit_cnt == 3'd7) begin
+                                   -5-  
+213                                    n_bit_cnt = 3'd0;
+214        
+215                                    // sample_byte[7:1] = address
+216                                    // sample_byte[0]   = R/W, 0: write, 1: read
+217                                    if (sample_byte[7:1] == SLAVE_ADDR) begin
+                                       -6-  
+218                                        n_addr_ok    = 1'b1;
+                                           ==>
+219                                        n_addr_match = 1'b1;
+220                                        n_rw_mode    = sample_byte[0];
+221                                    end else begin
+222                                        n_addr_ok    = 1'b0;
+                                           ==>
+223                                        n_addr_match = 1'b0;
+224                                        n_rw_mode    = sample_byte[0];
+225                                    end
+226        
+227                                    n_state = ADDR_ACK_WAIT_FALL;
+228                                end else begin
+229                                    n_bit_cnt = c_bit_cnt + 1'b1;
+                                       ==>
+230                                end
+231                            end
+                               MISSING_ELSE
+                               ==>
+232                        end
+233        
+234                        // 2. Address ACK 준비
+235                        ADDR_ACK_WAIT_FALL: begin
+236                            // 8번째 address bit 이후 SCL falling에서 ACK 준비
+237                            if (scl_fall) begin
+                               -7-  
+238                                if (c_addr_ok) begin
+                                   -8-  
+239                                    n_sda_drive_low = 1'b1;  // ACK = SDA Low
+                                       ==>
+240                                end else begin
+241                                    n_sda_drive_low = 1'b0;  // NACK = release
+                                       ==>
+242                                end
+243        
+244                                n_state = ADDR_ACK_HOLD;
+245                            end
+                               MISSING_ELSE
+                               ==>
+246                        end
+247        
+248                        // 3. Address ACK 유지 후 write/read 분기
+249                        ADDR_ACK_HOLD: begin
+250                            // 9번째 ACK clock이 끝나는 falling edge에서 release
+251                            if (scl_fall) begin
+                               -9-  
+252                                n_sda_drive_low = 1'b0;
+253                                n_shift_reg     = 8'd0;
+254                                n_bit_cnt       = 3'd0;
+255        
+256                                if (!c_addr_ok) begin
+                                   -10-  
+257                                    n_state = IDLE;
+                                       ==>
+258                                    n_busy  = 1'b0;
+259                                end else if (c_rw_mode == 1'b0) begin
+                                            -11-  
+260                                    // Write transaction
+261                                    n_state = WRITE_DATA;
+                                       ==>
+262                                end else begin
+263                                    // Read transaction
+264                                    n_tx_shift_reg = tx_data;
+                                       ==>
+265        
+266                                    // 첫 bit를 다음 SCL rising 전에 준비
+267                                    // tx bit가 0이면 drive low, 1이면 release
+268                                    n_sda_drive_low = ~tx_data[7];
+269        
+270                                    n_state = READ_DATA;
+271                                end
+272                            end
+                               MISSING_ELSE
+                               ==>
+273                        end
+274        
+275                        // 4. Write data byte 수신
+276                        WRITE_DATA: begin
+277                            if (scl_rise) begin
+                               -12-  
+278                                n_shift_reg = sample_byte;
+279        
+280                                if (c_bit_cnt == 3'd7) begin
+                                   -13-  
+281                                    n_bit_cnt = 3'd0;
+                                       ==>
+282                                    n_rx_data = sample_byte;
+283                                    n_rx_done = 1'b1;
+284                                    n_state   = WRITE_DATA_ACK_WAIT_FALL;
+285                                end else begin
+286                                    n_bit_cnt = c_bit_cnt + 1'b1;
+                                       ==>
+287                                end
+288                            end
+                               MISSING_ELSE
+                               ==>
+289                        end
+290        
+291                        // 5. Write data ACK 준비
+292                        WRITE_DATA_ACK_WAIT_FALL: begin
+293                            if (scl_fall) begin
+                               -14-  
+294                                n_sda_drive_low = 1'b1;  // ACK
+                                   ==>
+295                                n_state         = WRITE_DATA_ACK_HOLD;
+296                            end
+                               MISSING_ELSE
+                               ==>
+297                        end
+298        
+299                        // 6. Write data ACK 유지 후 다음 byte 대기
+300                        WRITE_DATA_ACK_HOLD: begin
+301                            if (scl_fall) begin
+                               -15-  
+302                                n_sda_drive_low = 1'b0;  // release
+                                   ==>
+303                                n_shift_reg     = 8'd0;
+304                                n_bit_cnt       = 3'd0;
+305        
+306                                // STOP 전까지 다음 data byte도 받을 수 있음
+307                                n_state         = WRITE_DATA;
+308                            end
+                               MISSING_ELSE
+                               ==>
+309                        end
+310        
+311                        // 7. Read data byte 송신
+312                        READ_DATA: begin
+313                            // Slave는 이미 SDA에 현재 bit를 올려둔 상태
+314                            // Master가 SCL High에서 sample한 뒤,
+315                            // SCL falling에서 다음 bit를 준비한다.
+316                            if (scl_fall) begin
+                               -16-  
+317                                if (c_bit_cnt == 3'd7) begin
+                                   -17-  
+318                                    // bit0까지 전송 완료.
+319                                    // 다음 9번째 clock은 Master ACK/NACK이므로 SDA release
+320                                    n_bit_cnt       = 3'd0;
+                                       ==>
+321                                    n_sda_drive_low = 1'b0;  // release
+322                                    n_tx_done       = 1'b1;
+323                                    n_state         = READ_MASTER_ACK;
+324                                end else begin
+325                                    // 다음 bit 준비
+326                                    n_tx_shift_reg  = {c_tx_shift_reg[6:0], 1'b0};
+                                       ==>
+327                                    n_bit_cnt       = c_bit_cnt + 1'b1;
+328        
+329                                    // shift 후 다음 bit는 기존 c_tx_shift_reg[6]
+330                                    n_sda_drive_low = ~c_tx_shift_reg[6];
+331                                end
+332                            end
+                               MISSING_ELSE
+                               ==>
+333                        end
+334        
+335                        // 8. Read 후 Master ACK/NACK 확인
+336                        READ_MASTER_ACK: begin
+337                            // 9번째 clock에서 Master가 ACK/NACK을 SDA에 출력
+338                            // ACK=0이면 계속 읽기, NACK=1이면 종료 대기
+339                            if (scl_rise) begin
+                               -18-  
+340                                n_master_ack = sda_sample;
+341        
+342                                if (sda_sample == 1'b0) begin
+                                   -19-  
+343                                    // Master ACK: 다음 byte 전송 가능
+344                                    // 여기서는 단순히 같은 tx_data를 다시 전송하도록 구성
+345                                    n_tx_shift_reg  = tx_data;
+                                       ==>
+346                                    n_bit_cnt       = 3'd0;
+347                                    n_sda_drive_low = ~tx_data[7];
+348                                    n_state         = READ_DATA;
+349                                end else begin
+350                                    // Master NACK: 더 이상 read 안 함
+351                                    n_sda_drive_low = 1'b0;
+                                       ==>
+352                                    n_state         = IDLE;
+353                                    n_busy          = 1'b0;
+354                                end
+355                            end
+                               MISSING_ELSE
+                               ==>
+356                        end
+357        
+358                        default: begin
+359                            n_state         = IDLE;
+                               ==>
+
+Branches:
+
+-1- -2- -3-                       -4- -5- -6- -7- -8- -9- -10- -11- -12- -13- -14- -15- -16- -17- -18- -19- Status      
+1   -   -                         -   -   -   -   -   -   -    -    -    -    -    -    -    -    -    -    Covered     
+0   1   -                         -   -   -   -   -   -   -    -    -    -    -    -    -    -    -    -    Covered     
+0   0   IDLE                      -   -   -   -   -   -   -    -    -    -    -    -    -    -    -    -    Covered     
+0   0   ADDR                      1   1   1   -   -   -   -    -    -    -    -    -    -    -    -    -    Covered     
+0   0   ADDR                      1   1   0   -   -   -   -    -    -    -    -    -    -    -    -    -    Covered     
+0   0   ADDR                      1   0   -   -   -   -   -    -    -    -    -    -    -    -    -    -    Covered     
+0   0   ADDR                      0   -   -   -   -   -   -    -    -    -    -    -    -    -    -    -    Covered     
+0   0   ADDR_ACK_WAIT_FALL        -   -   -   1   1   -   -    -    -    -    -    -    -    -    -    -    Covered     
+0   0   ADDR_ACK_WAIT_FALL        -   -   -   1   0   -   -    -    -    -    -    -    -    -    -    -    Covered     
+0   0   ADDR_ACK_WAIT_FALL        -   -   -   0   -   -   -    -    -    -    -    -    -    -    -    -    Covered     
+0   0   ADDR_ACK_HOLD             -   -   -   -   -   1   1    -    -    -    -    -    -    -    -    -    Covered     
+0   0   ADDR_ACK_HOLD             -   -   -   -   -   1   0    1    -    -    -    -    -    -    -    -    Covered     
+0   0   ADDR_ACK_HOLD             -   -   -   -   -   1   0    0    -    -    -    -    -    -    -    -    Covered     
+0   0   ADDR_ACK_HOLD             -   -   -   -   -   0   -    -    -    -    -    -    -    -    -    -    Covered     
+0   0   WRITE_DATA                -   -   -   -   -   -   -    -    1    1    -    -    -    -    -    -    Covered     
+0   0   WRITE_DATA                -   -   -   -   -   -   -    -    1    0    -    -    -    -    -    -    Covered     
+0   0   WRITE_DATA                -   -   -   -   -   -   -    -    0    -    -    -    -    -    -    -    Covered     
+0   0   WRITE_DATA_ACK_WAIT_FALL  -   -   -   -   -   -   -    -    -    -    1    -    -    -    -    -    Covered     
+0   0   WRITE_DATA_ACK_WAIT_FALL  -   -   -   -   -   -   -    -    -    -    0    -    -    -    -    -    Covered     
+0   0   WRITE_DATA_ACK_HOLD       -   -   -   -   -   -   -    -    -    -    -    1    -    -    -    -    Covered     
+0   0   WRITE_DATA_ACK_HOLD       -   -   -   -   -   -   -    -    -    -    -    0    -    -    -    -    Covered     
+0   0   READ_DATA                 -   -   -   -   -   -   -    -    -    -    -    -    1    1    -    -    Covered     
+0   0   READ_DATA                 -   -   -   -   -   -   -    -    -    -    -    -    1    0    -    -    Covered     
+0   0   READ_DATA                 -   -   -   -   -   -   -    -    -    -    -    -    0    -    -    -    Covered     
+0   0   READ_MASTER_ACK           -   -   -   -   -   -   -    -    -    -    -    -    -    -    1    1    Not Covered 
+0   0   READ_MASTER_ACK           -   -   -   -   -   -   -    -    -    -    -    -    -    -    1    0    Covered     
+0   0   READ_MASTER_ACK           -   -   -   -   -   -   -    -    -    -    -    -    -    -    0    -    Covered     
+0   0   default                   -   -   -   -   -   -   -    -    -    -    -    -    -    -    -    -    Covered     
+
+
+368                if (rst) begin
+                   -1-  
+369                    c_state         <= IDLE;
+                       ==>
+370        
+371                    c_scl_sync      <= 3'b111;
+372                    c_sda_sync      <= 3'b111;
+373        
+374                    c_shift_reg     <= 8'd0;
+375                    c_tx_shift_reg  <= 8'd0;
+376                    c_bit_cnt       <= 3'd0;
+377        
+378                    c_rx_data       <= 8'd0;
+379                    c_rx_done       <= 1'b0;
+380                    c_tx_done       <= 1'b0;
+381        
+382                    c_addr_match    <= 1'b0;
+383                    c_addr_ok       <= 1'b0;
+384                    c_rw_mode       <= 1'b0;
+385                    c_master_ack    <= 1'b1;
+386                    c_busy          <= 1'b0;
+387        
+388                    c_sda_drive_low <= 1'b0;
+389                end else begin
+390                    c_state         <= n_state;
+                       ==>
+
+Branches:
+
+-1- Status  
+1   Covered 
+0   Covered 
+
+
+-------------------------------------------------------------------------------
+===============================================================================
+Module Instance : tb_i2c.dut.u_i2c_slave_top.u_i2c_slave_simple
+===============================================================================
+
+Instance :
+
+SCORE   LINE            COND          TOGGLE          FSM           BRANCH       
+ 88.02   97.06 132/136   96.67 29/30   97.69 254/260   52.00 13/25   96.67 29/30 
+
+
+Instance's subtree :
+
+SCORE   LINE            COND          TOGGLE          FSM           BRANCH       
+ 88.02   97.06 132/136   96.67 29/30   97.69 254/260   52.00 13/25   96.67 29/30 
+
+
+Module : 
+
+SCORE   LINE            COND          TOGGLE          FSM           BRANCH        NAME             
+ 88.02   97.06 132/136   96.67 29/30   97.69 254/260   52.00 13/25   96.67 29/30  i2c_slave_simple 
+
+
+Parent : 
+
+SCORE   LINE           COND        TOGGLE        FSM            BRANCH      NAME            
+ 98.81  --     --      100.00 2/2   96.43 54/56  --     --      100.00 2/2  u_i2c_slave_top 
+
+
+Subtrees :
+
+
+no children
+----------------
+
+
+-------------------------------------------------------------------------------
+Since this is the module's only instance, the coverage report is the same as for the module.
+===============================================================================
+Module : i2c_master
+===============================================================================
+SCORE   LINE            COND        TOGGLE          FSM           BRANCH       
+ 89.76   99.11 111/112  100.00 8/8   96.97 128/132   66.67 12/18   86.05 37/43 
+
+Source File(s) : 
+
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/i2c/rtl/i2c_master.sv
+
+Module self-instances :
+
+SCORE   LINE            COND        TOGGLE          FSM           BRANCH        NAME                    
+ 89.76   99.11 111/112  100.00 8/8   96.97 128/132   66.67 12/18   86.05 37/43  tb_i2c.dut.u_i2c_master 
+
+
+
+-------------------------------------------------------------------------------
+Line Coverage for Module : i2c_master
+
+             Line No.   Total   Covered  Percent
+TOTAL                      112      111    99.11
+ALWAYS             60        8        8   100.00
+ALWAYS             76      104      103    99.04
+
+59                          always_ff @(posedge clk or posedge rst) begin : qtr_tick_gen
+60         1/1                  if (rst) begin
+61         1/1                      div_cnt  <= 0;
+62         1/1                      qtr_tick <= 1'b0;
+63                              end else begin
+64         1/1                      if (div_cnt == QTR_DIV - 1) begin
+65         1/1                          div_cnt  <= 0;
+66         1/1                          qtr_tick <= 1'b1;
+67                                  end else begin
+68         1/1                          div_cnt  <= div_cnt + 1;
+69         1/1                          qtr_tick <= 1'b0;
+70                                  end
+71                              end
+72                          end
+73                      
+74                      
+75                          always_ff @(posedge clk or posedge rst) begin
+76         1/1                  if (rst) begin
+77         1/1                      state        <= IDLE;
+78         1/1                      scl_r        <= 1'b1;
+79         1/1                      sda_r        <= 1'b1;
+80         1/1                      step         <= 2'd0;
+81         1/1                      done         <= 1'b0;
+82         1/1                      tx_shift_reg <= 8'd0;
+83         1/1                      rx_shift_reg <= 8'd0;
+84         1/1                      rx_data      <= 8'd0;
+85                      
+86         1/1                      bit_cnt      <= 3'd0;
+87         1/1                      is_read      <= 1'b0;
+88         1/1                      ack_in_r     <= 1'b1;
+89         1/1                      ack_out      <= 1'b1;
+90                              end else begin
+91         1/1                      done <= 1'b0;
+92         1/1                      case (state)
+93                                      IDLE: begin
+94         1/1                              scl_r <= 1'b1;
+95         1/1                              sda_r <= 1'b1;
+96         1/1                              step  <= 2'd0;
+97         1/1                              if (cmd_start) begin
+98         1/1                                  state <= START;
+99         1/1                                  step  <= 0;
+100                                         end
+                        MISSING_ELSE
+101                                     end
+102                                     START: begin
+103        1/1                              if (qtr_tick) begin
+104        1/1                                  case (step)
+105                                                 2'd0: begin
+106        1/1                                          sda_r <= 1'b1;
+107        1/1                                          scl_r <= 1'b1;
+108        1/1                                          step  <= 2'd1;
+109                                                 end
+110                                                 2'd1: begin
+111        1/1                                          sda_r <= 1'b0;
+112        1/1                                          scl_r <= 1'b1;
+113        1/1                                          step  <= 2'd2;
+114                                                 end
+115                                                 2'd2: begin
+116        1/1                                          sda_r <= 1'b0;
+117        1/1                                          scl_r <= 1'b0;
+118        1/1                                          step  <= 2'd3;
+119                     
+120                                                 end
+121                                                 2'd3: begin
+122        1/1                                          sda_r <= 1'b0;
+123        1/1                                          scl_r <= 1'b0;
+124        1/1                                          step  <= 2'd0;
+125        1/1                                          done  <= 1'b1;
+126        1/1                                          state <= WAIT_CMD;
+127                                                 end
+                   ==>  MISSING_DEFAULT
+128                                             endcase
+129                                         end
+                        MISSING_ELSE
+130                                     end
+131                                     WAIT_CMD: begin
+132        1/1                              if (cmd_write) begin
+133        1/1                                  tx_shift_reg <= tx_data;
+134        1/1                                  bit_cnt      <= 0;
+135        1/1                                  is_read      <= 1'b0;
+136        1/1                                  state        <= DATA;
+137        1/1                              end else if (cmd_read) begin
+138        1/1                                  rx_shift_reg <= 0;
+139        1/1                                  bit_cnt      <= 0;
+140        1/1                                  is_read      <= 1'b1;
+141        1/1                                  ack_in_r     <= ack_in;
+142        1/1                                  state        <= DATA;
+143        1/1                              end else if (cmd_stop) begin
+144        1/1                                  state <= STOP;
+145        1/1                              end else if (cmd_start) begin
+146        0/1     ==>                          state <= START;
+147                                         end
+                        MISSING_ELSE
+148                                     end
+149                                     DATA: begin
+150        1/1                              if (qtr_tick) begin
+151        1/1                                  case (step)
+152                                                 2'd0: begin
+153        1/1                                          step  <= 1'd1;
+154        1/1                                          scl_r <= 1'b0;
+155        1/1                                          sda_r <= is_read ? 1'b1 : tx_shift_reg[7];
+156                                                 end
+157                                                 2'd1: begin
+158        1/1                                          step  <= 2'd2;
+159        1/1                                          scl_r <= 1'b1;
+160                                                 end
+161                                                 2'd2: begin
+162        1/1                                          step  <= 2'd3;
+163        1/1                                          scl_r <= 1'b1;
+164        1/1                                          if (is_read) begin
+165        1/1                                              rx_shift_reg <= {rx_shift_reg[6:0], sda_i};
+166                                                     end
+                        MISSING_ELSE
+167                                                 end
+168                                                 2'd3: begin
+169        1/1                                          step  <= 2'd0;
+170        1/1                                          scl_r <= 1'b0;
+171        1/1                                          if (!is_read) begin
+172        1/1                                              tx_shift_reg <= {tx_shift_reg[6:0], 1'b0};
+173                                                     end
+                        MISSING_ELSE
+174        1/1                                          if (bit_cnt == 7) begin
+175        1/1                                              state <= DATA_ACK;
+176                                                     end else begin
+177        1/1                                              bit_cnt <= bit_cnt + 1;
+178                                                     end
+179                                                 end
+                   ==>  MISSING_DEFAULT
+180                                             endcase
+181                                         end
+                        MISSING_ELSE
+182                                     end
+183                                     DATA_ACK: begin
+184        1/1                              if (qtr_tick) begin
+185        1/1                                  case (step)
+186                                                 2'd0: begin
+187        1/1                                          scl_r <= 1'b0;
+188        1/1                                          if (is_read) begin
+189        1/1                                              sda_r <= ack_in_r;
+190                                                     end else begin
+191        1/1                                              sda_r <= 1'b1;
+192                                                     end
+193        1/1                                          step <= 2'd1;
+194                                                 end
+195                                                 2'd1: begin
+196        1/1                                          scl_r <= 1'b1;
+197        1/1                                          step  <= 2'd2;
+198                     
+199                                                 end
+200                                                 2'd2: begin
+201        1/1                                          step  <= 2'd3;
+202        1/1                                          scl_r <= 1'b1;
+203        1/1                                          if (!is_read) begin
+204        1/1                                              ack_out <= sda_i;
+205                                                     end else begin
+206        1/1                                              rx_data <= rx_shift_reg;
+207                                                     end
+208                                                 end
+209                                                 2'd3: begin
+210        1/1                                          scl_r <= 1'b0;
+211        1/1                                          step  <= 2'd0;
+212        1/1                                          done  <= 1'b1;
+213        1/1                                          state <= WAIT_CMD;
+214                                                 end
+                   ==>  MISSING_DEFAULT
+215                                             endcase
+216                                         end
+                        MISSING_ELSE
+217                                     end
+218                                     STOP: begin
+219        1/1                              if (qtr_tick) begin
+220        1/1                                  case (step)
+221                                                 2'd0: begin
+222        1/1                                          sda_r <= 1'b0;
+223        1/1                                          scl_r <= 1'b0;
+224        1/1                                          step  <= 2'd1;
+225                                                 end
+226                                                 2'd1: begin
+227        1/1                                          sda_r <= 1'b0;
+228        1/1                                          scl_r <= 1'b1;
+229        1/1                                          step  <= 2'd2;
+230                                                 end
+231                                                 2'd2: begin
+232        1/1                                          sda_r <= 1'b1;
+233        1/1                                          scl_r <= 1'b1;
+234        1/1                                          step  <= 2'd3;
+235                                                 end
+236                                                 2'd3: begin
+237        1/1                                          sda_r <= 1'b1;
+238        1/1                                          scl_r <= 1'b1;
+239        1/1                                          step  <= 2'd0;
+240        1/1                                          done  <= 1'b1;
+241        1/1                                          state <= IDLE;
+242                                                 end
+                   ==>  MISSING_DEFAULT
+243                                             endcase
+244                                         end
+                        MISSING_ELSE
+245                                     end
+                   ==>  MISSING_DEFAULT
+
+-------------------------------------------------------------------------------
+Cond Coverage for Module : i2c_master
+
+               Total   Covered  Percent
+Conditions          8        8   100.00
+Logical             8        8   100.00
+Non-Logical         0        0
+Event               0        0
+
+ LINE       64
+ EXPRESSION (div_cnt == (QTR_DIV - 1))
+            -------------1------------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       155
+ EXPRESSION (is_read ? 1'b1 : tx_shift_reg[7])
+             ---1---
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       174
+ EXPRESSION (bit_cnt == 3'h7)
+            --------1--------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       56
+ EXPRESSION (state != IDLE)
+            -------1-------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+-------------------------------------------------------------------------------
+Toggle Coverage for Module : i2c_master
+                Total Covered Percent 
+Totals          26    24      92.31   
+Total Bits      132   128     96.97   
+Total Bits 0->1 66    64      96.97   
+Total Bits 1->0 66    64      96.97   
+
+                            
+Ports          15 14 93.33  
+Port Bits      58 56 96.55  
+Port Bits 0->1 29 28 96.55  
+Port Bits 1->0 29 28 96.55  
+
+                              
+Signals          11 10 90.91  
+Signal Bits      74 72 97.30  
+Signal Bits 0->1 37 36 97.30  
+Signal Bits 1->0 37 36 97.30  
+
+Port Details
+             Toggle Toggle 1->0 Toggle 0->1 Direction 
+clk          Yes    Yes         Yes         INPUT     
+rst          Yes    Yes         Yes         INPUT     
+cmd_start    Yes    Yes         Yes         INPUT     
+cmd_write    Yes    Yes         Yes         INPUT     
+cmd_read     Yes    Yes         Yes         INPUT     
+cmd_stop     Yes    Yes         Yes         INPUT     
+tx_data[7:0] Yes    Yes         Yes         INPUT     
+rx_data[7:0] Yes    Yes         Yes         OUTPUT    
+ack_in       No     No          No          INPUT     
+ack_out      Yes    Yes         Yes         OUTPUT    
+busy         Yes    Yes         Yes         OUTPUT    
+done         Yes    Yes         Yes         OUTPUT    
+scl          Yes    Yes         Yes         OUTPUT    
+sda_o        Yes    Yes         Yes         OUTPUT    
+sda_i        Yes    Yes         Yes         INPUT     
+
+Signal Details
+                  Toggle Toggle 1->0 Toggle 0->1 
+state[2:0]        Yes    Yes         Yes         
+div_cnt[7:0]      Yes    Yes         Yes         
+qtr_tick          Yes    Yes         Yes         
+scl_r             Yes    Yes         Yes         
+sda_r             Yes    Yes         Yes         
+step[1:0]         Yes    Yes         Yes         
+tx_shift_reg[7:0] Yes    Yes         Yes         
+rx_shift_reg[7:0] Yes    Yes         Yes         
+bit_cnt[2:0]      Yes    Yes         Yes         
+is_read           Yes    Yes         Yes         
+ack_in_r          No     No          No          
+
+
+-------------------------------------------------------------------------------
+FSM Coverage for Module : i2c_master
+Summary for FSM :: state
+            Total Covered Percent                         
+States      6     6       100.00  (Not included in score) 
+Transitions 12    8       66.67                           
+Sequences   0     0                                       
+
+State, Transition and Sequence Details for FSM :: state
+-------------------------------------------------------------------------------
+states   Line No. Covered 
+DATA     136      Covered 
+DATA_ACK 175      Covered 
+IDLE     77       Covered 
+START    98       Covered 
+STOP     144      Covered 
+WAIT_CMD 126      Covered 
+
+transitions        Line No. Covered     
+DATA->DATA_ACK     175      Covered     
+DATA->IDLE         77       Covered     
+DATA_ACK->IDLE     77       Not Covered 
+DATA_ACK->WAIT_CMD 213      Covered     
+IDLE->START        98       Covered     
+START->IDLE        77       Not Covered 
+START->WAIT_CMD    126      Covered     
+STOP->IDLE         77       Covered     
+WAIT_CMD->DATA     136      Covered     
+WAIT_CMD->IDLE     77       Not Covered 
+WAIT_CMD->START    146      Not Covered 
+WAIT_CMD->STOP     144      Covered     
+
+Summary for FSM :: step
+            Total Covered Percent                         
+States      4     4       100.00  (Not included in score) 
+Transitions 6     4       66.67                           
+Sequences   0     0                                       
+
+State, Transition and Sequence Details for FSM :: step
+-------------------------------------------------------------------------------
+states Line No. Covered 
+'h0    80       Covered 
+'h1    108      Covered 
+'h2    113      Covered 
+'h3    118      Covered 
+
+transitions Line No. Covered     
+'h0->'h1    108      Covered     
+'h1->'h0    80       Not Covered 
+'h1->'h2    113      Covered     
+'h2->'h0    80       Not Covered 
+'h2->'h3    118      Covered     
+'h3->'h0    80       Covered     
+
+
+-------------------------------------------------------------------------------
+Branch Coverage for Module : i2c_master
+         Line No. Total Covered Percent 
+Branches          43    37      86.05   
+IF       60       3     3       100.00  
+IF       76       40    34      85.00   
+
+
+60                 if (rst) begin
+                   -1-  
+61                     div_cnt  <= 0;
+                       ==>
+62                     qtr_tick <= 1'b0;
+63                 end else begin
+64                     if (div_cnt == QTR_DIV - 1) begin
+                       -2-  
+65                         div_cnt  <= 0;
+                           ==>
+66                         qtr_tick <= 1'b1;
+67                     end else begin
+68                         div_cnt  <= div_cnt + 1;
+                           ==>
+
+Branches:
+
+-1- -2- Status  
+1   -   Covered 
+0   1   Covered 
+0   0   Covered 
+
+
+76                 if (rst) begin
+                   -1-  
+77                     state        <= IDLE;
+                       ==>
+78                     scl_r        <= 1'b1;
+79                     sda_r        <= 1'b1;
+80                     step         <= 2'd0;
+81                     done         <= 1'b0;
+82                     tx_shift_reg <= 8'd0;
+83                     rx_shift_reg <= 8'd0;
+84                     rx_data      <= 8'd0;
+85         
+86                     bit_cnt      <= 3'd0;
+87                     is_read      <= 1'b0;
+88                     ack_in_r     <= 1'b1;
+89                     ack_out      <= 1'b1;
+90                 end else begin
+91                     done <= 1'b0;
+92                     case (state)
+                       -2-  
+93                         IDLE: begin
+94                             scl_r <= 1'b1;
+95                             sda_r <= 1'b1;
+96                             step  <= 2'd0;
+97                             if (cmd_start) begin
+                               -3-  
+98                                 state <= START;
+                                   ==>
+99                                 step  <= 0;
+100                            end
+                               MISSING_ELSE
+                               ==>
+101                        end
+102                        START: begin
+103                            if (qtr_tick) begin
+                               -4-  
+104                                case (step)
+                                   -5-  
+105                                    2'd0: begin
+106                                        sda_r <= 1'b1;
+                                           ==>
+107                                        scl_r <= 1'b1;
+108                                        step  <= 2'd1;
+109                                    end
+110                                    2'd1: begin
+111                                        sda_r <= 1'b0;
+                                           ==>
+112                                        scl_r <= 1'b1;
+113                                        step  <= 2'd2;
+114                                    end
+115                                    2'd2: begin
+116                                        sda_r <= 1'b0;
+                                           ==>
+117                                        scl_r <= 1'b0;
+118                                        step  <= 2'd3;
+119        
+120                                    end
+121                                    2'd3: begin
+122                                        sda_r <= 1'b0;
+                                           ==>
+123                                        scl_r <= 1'b0;
+124                                        step  <= 2'd0;
+125                                        done  <= 1'b1;
+126                                        state <= WAIT_CMD;
+127                                    end
+                                       MISSING_DEFAULT
+                                       ==>
+128                                endcase
+129                            end
+                               MISSING_ELSE
+                               ==>
+130                        end
+131                        WAIT_CMD: begin
+132                            if (cmd_write) begin
+                               -6-  
+133                                tx_shift_reg <= tx_data;
+                                   ==>
+134                                bit_cnt      <= 0;
+135                                is_read      <= 1'b0;
+136                                state        <= DATA;
+137                            end else if (cmd_read) begin
+                                        -7-  
+138                                rx_shift_reg <= 0;
+                                   ==>
+139                                bit_cnt      <= 0;
+140                                is_read      <= 1'b1;
+141                                ack_in_r     <= ack_in;
+142                                state        <= DATA;
+143                            end else if (cmd_stop) begin
+                                        -8-  
+144                                state <= STOP;
+                                   ==>
+145                            end else if (cmd_start) begin
+                                        -9-  
+146                                state <= START;
+                                   ==>
+147                            end
+                               MISSING_ELSE
+                               ==>
+148                        end
+149                        DATA: begin
+150                            if (qtr_tick) begin
+                               -10-  
+151                                case (step)
+                                   -11-  
+152                                    2'd0: begin
+153                                        step  <= 1'd1;
+154                                        scl_r <= 1'b0;
+155                                        sda_r <= is_read ? 1'b1 : tx_shift_reg[7];
+                                                            -12-  
+                                                            ==>  
+                                                            ==>  
+156                                    end
+157                                    2'd1: begin
+158                                        step  <= 2'd2;
+                                           ==>
+159                                        scl_r <= 1'b1;
+160                                    end
+161                                    2'd2: begin
+162                                        step  <= 2'd3;
+163                                        scl_r <= 1'b1;
+164                                        if (is_read) begin
+                                           -13-  
+165                                            rx_shift_reg <= {rx_shift_reg[6:0], sda_i};
+                                               ==>
+166                                        end
+                                           MISSING_ELSE
+                                           ==>
+167                                    end
+168                                    2'd3: begin
+169                                        step  <= 2'd0;
+170                                        scl_r <= 1'b0;
+171                                        if (!is_read) begin
+                                           -14-  
+172                                            tx_shift_reg <= {tx_shift_reg[6:0], 1'b0};
+                                               ==>
+173                                        end
+                                           MISSING_ELSE
+                                           ==>
+174                                        if (bit_cnt == 7) begin
+                                           -15-  
+175                                            state <= DATA_ACK;
+                                               ==>
+176                                        end else begin
+177                                            bit_cnt <= bit_cnt + 1;
+                                               ==>
+178                                        end
+179                                    end
+                                       MISSING_DEFAULT
+                                       ==>
+180                                endcase
+181                            end
+                               MISSING_ELSE
+                               ==>
+182                        end
+183                        DATA_ACK: begin
+184                            if (qtr_tick) begin
+                               -16-  
+185                                case (step)
+                                   -17-  
+186                                    2'd0: begin
+187                                        scl_r <= 1'b0;
+188                                        if (is_read) begin
+                                           -18-  
+189                                            sda_r <= ack_in_r;
+                                               ==>
+190                                        end else begin
+191                                            sda_r <= 1'b1;
+                                               ==>
+192                                        end
+193                                        step <= 2'd1;
+194                                    end
+195                                    2'd1: begin
+196                                        scl_r <= 1'b1;
+                                           ==>
+197                                        step  <= 2'd2;
+198        
+199                                    end
+200                                    2'd2: begin
+201                                        step  <= 2'd3;
+202                                        scl_r <= 1'b1;
+203                                        if (!is_read) begin
+                                           -19-  
+204                                            ack_out <= sda_i;
+                                               ==>
+205                                        end else begin
+206                                            rx_data <= rx_shift_reg;
+                                               ==>
+207                                        end
+208                                    end
+209                                    2'd3: begin
+210                                        scl_r <= 1'b0;
+                                           ==>
+211                                        step  <= 2'd0;
+212                                        done  <= 1'b1;
+213                                        state <= WAIT_CMD;
+214                                    end
+                                       MISSING_DEFAULT
+                                       ==>
+215                                endcase
+216                            end
+                               MISSING_ELSE
+                               ==>
+217                        end
+218                        STOP: begin
+219                            if (qtr_tick) begin
+                               -20-  
+220                                case (step)
+                                   -21-  
+221                                    2'd0: begin
+222                                        sda_r <= 1'b0;
+                                           ==>
+223                                        scl_r <= 1'b0;
+224                                        step  <= 2'd1;
+225                                    end
+226                                    2'd1: begin
+227                                        sda_r <= 1'b0;
+                                           ==>
+228                                        scl_r <= 1'b1;
+229                                        step  <= 2'd2;
+230                                    end
+231                                    2'd2: begin
+232                                        sda_r <= 1'b1;
+                                           ==>
+233                                        scl_r <= 1'b1;
+234                                        step  <= 2'd3;
+235                                    end
+236                                    2'd3: begin
+237                                        sda_r <= 1'b1;
+                                           ==>
+238                                        scl_r <= 1'b1;
+239                                        step  <= 2'd0;
+240                                        done  <= 1'b1;
+241                                        state <= IDLE;
+242                                    end
+                                       MISSING_DEFAULT
+                                       ==>
+243                                endcase
+244                            end
+                               MISSING_ELSE
+                               ==>
+245                        end
+                           MISSING_DEFAULT
+                           ==>
+
+Branches:
+
+-1- -2-             -3- -4- -5-             -6- -7- -8- -9- -10- -11-            -12- -13- -14- -15- -16- -17-            -18- -19- -20- -21-            Status      
+1   -               -   -   -               -   -   -   -   -    -               -    -    -    -    -    -               -    -    -    -               Covered     
+0   IDLE            1   -   -               -   -   -   -   -    -               -    -    -    -    -    -               -    -    -    -               Covered     
+0   IDLE            0   -   -               -   -   -   -   -    -               -    -    -    -    -    -               -    -    -    -               Covered     
+0   START           -   1   2'b0            -   -   -   -   -    -               -    -    -    -    -    -               -    -    -    -               Covered     
+0   START           -   1   2'b1            -   -   -   -   -    -               -    -    -    -    -    -               -    -    -    -               Covered     
+0   START           -   1   2'd2            -   -   -   -   -    -               -    -    -    -    -    -               -    -    -    -               Covered     
+0   START           -   1   2'd3            -   -   -   -   -    -               -    -    -    -    -    -               -    -    -    -               Covered     
+0   START           -   1   MISSING_DEFAULT -   -   -   -   -    -               -    -    -    -    -    -               -    -    -    -               Not Covered 
+0   START           -   0   -               -   -   -   -   -    -               -    -    -    -    -    -               -    -    -    -               Covered     
+0   WAIT_CMD        -   -   -               1   -   -   -   -    -               -    -    -    -    -    -               -    -    -    -               Covered     
+0   WAIT_CMD        -   -   -               0   1   -   -   -    -               -    -    -    -    -    -               -    -    -    -               Covered     
+0   WAIT_CMD        -   -   -               0   0   1   -   -    -               -    -    -    -    -    -               -    -    -    -               Covered     
+0   WAIT_CMD        -   -   -               0   0   0   1   -    -               -    -    -    -    -    -               -    -    -    -               Not Covered 
+0   WAIT_CMD        -   -   -               0   0   0   0   -    -               -    -    -    -    -    -               -    -    -    -               Covered     
+0   DATA            -   -   -               -   -   -   -   1    2'b0            1    -    -    -    -    -               -    -    -    -               Covered     
+0   DATA            -   -   -               -   -   -   -   1    2'b0            0    -    -    -    -    -               -    -    -    -               Covered     
+0   DATA            -   -   -               -   -   -   -   1    2'b1            -    -    -    -    -    -               -    -    -    -               Covered     
+0   DATA            -   -   -               -   -   -   -   1    2'd2            -    1    -    -    -    -               -    -    -    -               Covered     
+0   DATA            -   -   -               -   -   -   -   1    2'd2            -    0    -    -    -    -               -    -    -    -               Covered     
+0   DATA            -   -   -               -   -   -   -   1    2'd3            -    -    1    -    -    -               -    -    -    -               Covered     
+0   DATA            -   -   -               -   -   -   -   1    2'd3            -    -    0    -    -    -               -    -    -    -               Covered     
+0   DATA            -   -   -               -   -   -   -   1    2'd3            -    -    -    1    -    -               -    -    -    -               Covered     
+0   DATA            -   -   -               -   -   -   -   1    2'd3            -    -    -    0    -    -               -    -    -    -               Covered     
+0   DATA            -   -   -               -   -   -   -   1    MISSING_DEFAULT -    -    -    -    -    -               -    -    -    -               Not Covered 
+0   DATA            -   -   -               -   -   -   -   0    -               -    -    -    -    -    -               -    -    -    -               Covered     
+0   DATA_ACK        -   -   -               -   -   -   -   -    -               -    -    -    -    1    2'b0            1    -    -    -               Covered     
+0   DATA_ACK        -   -   -               -   -   -   -   -    -               -    -    -    -    1    2'b0            0    -    -    -               Covered     
+0   DATA_ACK        -   -   -               -   -   -   -   -    -               -    -    -    -    1    2'b1            -    -    -    -               Covered     
+0   DATA_ACK        -   -   -               -   -   -   -   -    -               -    -    -    -    1    2'd2            -    1    -    -               Covered     
+0   DATA_ACK        -   -   -               -   -   -   -   -    -               -    -    -    -    1    2'd2            -    0    -    -               Covered     
+0   DATA_ACK        -   -   -               -   -   -   -   -    -               -    -    -    -    1    2'd3            -    -    -    -               Covered     
+0   DATA_ACK        -   -   -               -   -   -   -   -    -               -    -    -    -    1    MISSING_DEFAULT -    -    -    -               Not Covered 
+0   DATA_ACK        -   -   -               -   -   -   -   -    -               -    -    -    -    0    -               -    -    -    -               Covered     
+0   STOP            -   -   -               -   -   -   -   -    -               -    -    -    -    -    -               -    -    1    2'b0            Covered     
+0   STOP            -   -   -               -   -   -   -   -    -               -    -    -    -    -    -               -    -    1    2'b1            Covered     
+0   STOP            -   -   -               -   -   -   -   -    -               -    -    -    -    -    -               -    -    1    2'd2            Covered     
+0   STOP            -   -   -               -   -   -   -   -    -               -    -    -    -    -    -               -    -    1    2'd3            Covered     
+0   STOP            -   -   -               -   -   -   -   -    -               -    -    -    -    -    -               -    -    1    MISSING_DEFAULT Not Covered 
+0   STOP            -   -   -               -   -   -   -   -    -               -    -    -    -    -    -               -    -    0    -               Covered     
+0   MISSING_DEFAULT -   -   -               -   -   -   -   -    -               -    -    -    -    -    -               -    -    -    -               Not Covered 
+
+
+-------------------------------------------------------------------------------
+===============================================================================
+Module Instance : tb_i2c.dut.u_i2c_master
+===============================================================================
+
+Instance :
+
+SCORE   LINE            COND        TOGGLE          FSM           BRANCH       
+ 89.76   99.11 111/112  100.00 8/8   96.97 128/132   66.67 12/18   86.05 37/43 
+
+
+Instance's subtree :
+
+SCORE   LINE            COND        TOGGLE          FSM           BRANCH       
+ 89.76   99.11 111/112  100.00 8/8   96.97 128/132   66.67 12/18   86.05 37/43 
+
+
+Module : 
+
+SCORE   LINE            COND        TOGGLE          FSM           BRANCH        NAME       
+ 89.76   99.11 111/112  100.00 8/8   96.97 128/132   66.67 12/18   86.05 37/43  i2c_master 
+
+
+Parent : 
+
+SCORE   LINE           COND        TOGGLE          FSM            BRANCH      NAME 
+ 98.77  --     --      100.00 2/2   96.30 104/108  --     --      100.00 2/2  dut  
+
+
+Subtrees :
+
+
+no children
+----------------
+
+
+-------------------------------------------------------------------------------
+Since this is the module's only instance, the coverage report is the same as for the module.
+===============================================================================
+Module : i2c_master_slave_top
+===============================================================================
+SCORE   LINE           COND        TOGGLE          FSM            BRANCH     
+ 98.77  --     --      100.00 2/2   96.30 104/108  --     --      100.00 2/2 
+
+Source File(s) : 
+
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/i2c/rtl/i2c_master_slave_top.sv
+
+Module self-instances :
+
+SCORE   LINE           COND        TOGGLE          FSM            BRANCH      NAME       
+ 98.77  --     --      100.00 2/2   96.30 104/108  --     --      100.00 2/2  tb_i2c.dut 
+
+
+
+-------------------------------------------------------------------------------
+Cond Coverage for Module : i2c_master_slave_top
+
+               Total   Covered  Percent
+Conditions          2        2   100.00
+Logical             2        2   100.00
+Non-Logical         0        0
+Event               0        0
+
+ LINE       56
+ EXPRESSION (master_sda_o ? 1'bz : 1'b0)
+             ------1-----
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+-------------------------------------------------------------------------------
+Toggle Coverage for Module : i2c_master_slave_top
+                Total Covered Percent 
+Totals          26    24      92.31   
+Total Bits      108   104     96.30   
+Total Bits 0->1 54    52      96.30   
+Total Bits 1->0 54    52      96.30   
+
+                             
+Ports          22  20 90.91  
+Port Bits      100 96 96.00  
+Port Bits 0->1 50  48 96.00  
+Port Bits 1->0 50  48 96.00  
+
+                            
+Signals          4 4 100.00 
+Signal Bits      8 8 100.00 
+Signal Bits 0->1 4 4 100.00 
+Signal Bits 1->0 4 4 100.00 
+
+Port Details
+                    Toggle Toggle 1->0 Toggle 0->1 Direction 
+clk                 Yes    Yes         Yes         INPUT     
+reset               Yes    Yes         Yes         INPUT     
+cmd_start           Yes    Yes         Yes         INPUT     
+cmd_write           Yes    Yes         Yes         INPUT     
+cmd_read            Yes    Yes         Yes         INPUT     
+cmd_stop            Yes    Yes         Yes         INPUT     
+master_tx_data[7:0] Yes    Yes         Yes         INPUT     
+master_rx_data[7:0] Yes    Yes         Yes         OUTPUT    
+ack_in              No     No          No          INPUT     
+ack_out             Yes    Yes         Yes         OUTPUT    
+master_busy         Yes    Yes         Yes         OUTPUT    
+master_done         Yes    Yes         Yes         OUTPUT    
+slave_tx_data[7:0]  Yes    Yes         Yes         INPUT     
+slave_rx_data[7:0]  Yes    Yes         Yes         OUTPUT    
+slave_rx_done       Yes    Yes         Yes         OUTPUT    
+slave_tx_done       Yes    Yes         Yes         OUTPUT    
+slave_addr_match    Yes    Yes         Yes         OUTPUT    
+slave_rw_mode       Yes    Yes         Yes         OUTPUT    
+slave_master_ack    No     No          No          OUTPUT    
+slave_busy          Yes    Yes         Yes         OUTPUT    
+scl                 Yes    Yes         Yes         OUTPUT    
+sda                 Yes    Yes         Yes         OUTPUT    
+
+Signal Details
+             Toggle Toggle 1->0 Toggle 0->1 
+w_scl        Yes    Yes         Yes         
+w_sda        Yes    Yes         Yes         
+master_sda_o Yes    Yes         Yes         
+master_sda_i Yes    Yes         Yes         
+
+
+-------------------------------------------------------------------------------
+Branch Coverage for Module : i2c_master_slave_top
+         Line No. Total Covered Percent 
+Branches          2     2       100.00  
+TERNARY  56       2     2       100.00  
+
+
+56             assign w_sda = master_sda_o ? 1'bz : 1'b0;
+                                           -1-  
+                                           ==>  
+                                           ==>  
+
+Branches:
+
+-1- Status  
+1   Covered 
+0   Covered 
+
+
+-------------------------------------------------------------------------------
+===============================================================================
+Module Instance : tb_i2c.dut
+===============================================================================
+
+Instance :
+
+SCORE   LINE           COND        TOGGLE          FSM            BRANCH     
+ 98.77  --     --      100.00 2/2   96.30 104/108  --     --      100.00 2/2 
+
+
+Instance's subtree :
+
+SCORE   LINE            COND          TOGGLE          FSM           BRANCH       
+ 88.35   97.98 243/248   97.62 41/42   97.12 540/556   58.14 25/43   90.91 70/77 
+
+
+Module : 
+
+SCORE   LINE           COND        TOGGLE          FSM            BRANCH      NAME                 
+ 98.77  --     --      100.00 2/2   96.30 104/108  --     --      100.00 2/2  i2c_master_slave_top 
+
+
+Parent : 
+
+SCORE   LINE           COND           TOGGLE         FSM            BRANCH         NAME   
+--      --     --      --     --      --     --      --     --      --     --      tb_i2c 
+
+
+Subtrees :
+
+SCORE   LINE            COND          TOGGLE          FSM           BRANCH        NAME            
+ 89.76   99.11 111/112  100.00 8/8     96.97 128/132   66.67 12/18   86.05 37/43  u_i2c_master    
+ 88.06   97.06 132/136   96.88 31/32   97.47 308/316   52.00 13/25   96.88 31/32  u_i2c_slave_top 
+
+
+
+-------------------------------------------------------------------------------
+Since this is the module's only instance, the coverage report is the same as for the module.
+===============================================================================
+Module : i2c_slave_top
+===============================================================================
+SCORE   LINE           COND        TOGGLE        FSM            BRANCH     
+ 98.81  --     --      100.00 2/2   96.43 54/56  --     --      100.00 2/2 
+
+Source File(s) : 
+
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/i2c/rtl/i2c_slave.sv
+
+Module self-instances :
+
+SCORE   LINE           COND        TOGGLE        FSM            BRANCH      NAME                       
+ 98.81  --     --      100.00 2/2   96.43 54/56  --     --      100.00 2/2  tb_i2c.dut.u_i2c_slave_top 
+
+
+
+-------------------------------------------------------------------------------
+Cond Coverage for Module : i2c_slave_top
+
+               Total   Covered  Percent
+Conditions          2        2   100.00
+Logical             2        2   100.00
+Non-Logical         0        0
+Event               0        0
+
+ LINE       32
+ EXPRESSION (sda_drive_low ? 1'b0 : 1'bz)
+             ------1------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+-------------------------------------------------------------------------------
+Toggle Coverage for Module : i2c_slave_top
+                Total Covered Percent 
+Totals          14    13      92.86   
+Total Bits      56    54      96.43   
+Total Bits 0->1 28    27      96.43   
+Total Bits 1->0 28    27      96.43   
+
+                            
+Ports          12 11 91.67  
+Port Bits      52 50 96.15  
+Port Bits 0->1 26 25 96.15  
+Port Bits 1->0 26 25 96.15  
+
+                            
+Signals          2 2 100.00 
+Signal Bits      4 4 100.00 
+Signal Bits 0->1 2 2 100.00 
+Signal Bits 1->0 2 2 100.00 
+
+Port Details
+             Toggle Toggle 1->0 Toggle 0->1 Direction 
+clk          Yes    Yes         Yes         INPUT     
+rst          Yes    Yes         Yes         INPUT     
+scl          Yes    Yes         Yes         INPUT     
+sda          Yes    Yes         Yes         INOUT     
+tx_data[7:0] Yes    Yes         Yes         INPUT     
+rx_data[7:0] Yes    Yes         Yes         OUTPUT    
+rx_done      Yes    Yes         Yes         OUTPUT    
+tx_done      Yes    Yes         Yes         OUTPUT    
+addr_match   Yes    Yes         Yes         OUTPUT    
+rw_mode      Yes    Yes         Yes         OUTPUT    
+master_ack   No     No          No          OUTPUT    
+busy         Yes    Yes         Yes         OUTPUT    
+
+Signal Details
+              Toggle Toggle 1->0 Toggle 0->1 
+sda_i         Yes    Yes         Yes         
+sda_drive_low Yes    Yes         Yes         
+
+
+-------------------------------------------------------------------------------
+Branch Coverage for Module : i2c_slave_top
+         Line No. Total Covered Percent 
+Branches          2     2       100.00  
+TERNARY  32       2     2       100.00  
+
+
+32             assign sda   = sda_drive_low ? 1'b0 : 1'bz;
+                                            -1-  
+                                            ==>  
+                                            ==>  
+
+Branches:
+
+-1- Status  
+1   Covered 
+0   Covered 
+
+
+-------------------------------------------------------------------------------
+===============================================================================
+Module Instance : tb_i2c.dut.u_i2c_slave_top
+===============================================================================
+
+Instance :
+
+SCORE   LINE           COND        TOGGLE        FSM            BRANCH     
+ 98.81  --     --      100.00 2/2   96.43 54/56  --     --      100.00 2/2 
+
+
+Instance's subtree :
+
+SCORE   LINE            COND          TOGGLE          FSM           BRANCH       
+ 88.06   97.06 132/136   96.88 31/32   97.47 308/316   52.00 13/25   96.88 31/32 
+
+
+Module : 
+
+SCORE   LINE           COND        TOGGLE        FSM            BRANCH      NAME          
+ 98.81  --     --      100.00 2/2   96.43 54/56  --     --      100.00 2/2  i2c_slave_top 
+
+
+Parent : 
+
+SCORE   LINE           COND        TOGGLE          FSM            BRANCH      NAME 
+ 98.77  --     --      100.00 2/2   96.30 104/108  --     --      100.00 2/2  dut  
+
+
+Subtrees :
+
+SCORE   LINE            COND          TOGGLE          FSM           BRANCH        NAME               
+ 88.02   97.06 132/136   96.67 29/30   97.69 254/260   52.00 13/25   96.67 29/30  u_i2c_slave_simple 
+
+
+
+-------------------------------------------------------------------------------
+Since this is the module's only instance, the coverage report is the same as for the module.
+===============================================================================
+Module : tb_i2c
+===============================================================================
+SCORE   LINE           COND           TOGGLE         FSM            BRANCH        
+--      --     --      --     --      --     --      --     --      --     --     
+
+Source File(s) : 
+
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/i2c/tb/tb_i2c.sv
+
+Module self-instances :
+
+SCORE   LINE           COND           TOGGLE         FSM            BRANCH         NAME   
+--      --     --      --     --      --     --      --     --      --     --      tb_i2c 
+
+
+
+-------------------------------------------------------------------------------
+===============================================================================
+Module Instance : tb_i2c
+===============================================================================
+
+Instance :
+
+SCORE   LINE           COND           TOGGLE         FSM            BRANCH        
+--      --     --      --     --      --     --      --     --      --     --     
+
+
+Instance's subtree :
+
+SCORE   LINE            COND          TOGGLE          FSM           BRANCH       
+ 88.35   97.98 243/248   97.62 41/42   97.12 540/556   58.14 25/43   90.91 70/77 
+
+
+Module : 
+
+SCORE   LINE           COND           TOGGLE         FSM            BRANCH         NAME   
+--      --     --      --     --      --     --      --     --      --     --      tb_i2c 
+
+
+Parent : 
+
+none
+----------------
+
+
+Subtrees :
+
+SCORE   LINE            COND          TOGGLE          FSM           BRANCH        NAME 
+ 88.35   97.98 243/248   97.62 41/42   97.12 540/556   58.14 25/43   90.91 70/77  dut  
+
+
+
+-------------------------------------------------------------------------------
+Since this is the module's only instance, the coverage report is the same as for the module.

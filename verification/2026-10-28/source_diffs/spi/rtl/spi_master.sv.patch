@@ -1,0 +1,27 @@
+--- baseline/rtl/spi_master.sv
++++ followup/rtl/spi_master.sv
+@@ -75,7 +75,7 @@
+         half_tick      = 1'b0;
+ 
+         // half tick generation
+-        if (c_state == DATA) begin
++        if (c_state == DATA || c_state == STOP) begin
+             if (c_div_cnt == c_clk_div) begin
+                 n_div_cnt = 8'd0;
+                 half_tick = 1'b1;
+@@ -138,12 +138,15 @@
+             end
+ 
+             STOP: begin
++              // Complete the last programmed high half-period before CS release.
++              if (half_tick) begin
+                 n_sclk    = 1'b0;
+                 n_cs_n    = 1'b1;
+                 n_tx_busy = 1'b0;
+                 n_rx_done = 1'b1;
+                 n_mosi    = 1'b0;
+                 n_state   = IDLE;
++              end
+             end
+ 
+             default: begin

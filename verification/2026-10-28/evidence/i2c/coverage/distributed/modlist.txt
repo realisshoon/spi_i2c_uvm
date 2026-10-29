@@ -1,0 +1,16 @@
+Design Module List
+
+Total Module Definition Coverage Summary 
+SCORE   LINE            COND          TOGGLE          FSM           BRANCH       
+ 88.35   97.98 243/248   97.62 41/42   97.12 540/556   58.14 25/43   90.91 70/77 
+
+
+Total modules in report: 5
+-------------------------------------------------------------------------------
+SCORE   LINE            COND           TOGGLE          FSM            BRANCH         NAME                 
+ 88.02   97.06 132/136   96.67 29/30    97.69 254/260   52.00 13/25    96.67 29/30   i2c_slave_simple     
+ 89.76   99.11 111/112  100.00 8/8      96.97 128/132   66.67 12/18    86.05 37/43   i2c_master           
+ 98.77  --     --       100.00 2/2      96.30 104/108  --     --      100.00 2/2     i2c_master_slave_top 
+ 98.81  --     --       100.00 2/2      96.43 54/56    --     --      100.00 2/2     i2c_slave_top        
+--      --     --       --     --      --     --       --     --      --     --      tb_i2c               
+

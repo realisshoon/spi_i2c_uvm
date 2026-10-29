@@ -1,0 +1,79 @@
+--- baseline/tb/spi_sequence.sv
++++ followup/tb/spi_sequence.sv
+@@ -1,57 +1,20 @@
+ class spi_base_seq extends uvm_sequence #(spi_seq_item);
+-    `uvm_object_utils(spi_base_seq)
+-    function new(string name = "spi_base_seq");
+-        super.new(name);
+-    endfunction  //new()
+-
+-
+-    virtual task body();
+-        spi_seq_item item;
+-
+-        // Directed test 1: AA <-> 55
+-        item = spi_seq_item::type_id::create("item");
+-        start_item(item);
+-        item.master_tx_data = 8'hAA;
+-        item.slave_tx_data  = 8'h55;
+-        finish_item(item);
+-
+-        // Directed test 2: FF <-> 00
+-        item = spi_seq_item::type_id::create("item");
+-        start_item(item);
+-        item.master_tx_data = 8'hFF;
+-        item.slave_tx_data  = 8'h00;
+-        finish_item(item);
+-
+-        // Directed test 3: 00 <-> FF
+-        item = spi_seq_item::type_id::create("item");
+-        start_item(item);
+-        item.master_tx_data = 8'h00;
+-        item.slave_tx_data  = 8'hFF;
+-        finish_item(item);
+-
+-        // Directed test 4: 3C <-> C3
+-        item = spi_seq_item::type_id::create("item");
+-        start_item(item);
+-        item.master_tx_data = 8'h3C;
+-        item.slave_tx_data  = 8'hC3;
+-        finish_item(item);
+-
+-        // Random test
+-        repeat (20) begin
+-            item = spi_seq_item::type_id::create("item");
+-            start_item(item);
+-
+-            if (!item.randomize()) begin
+-                `uvm_error("SEQ", "Randomization failed")
+-            end
+-
+-            `uvm_info("SEQ", $sformatf(
+-                      "Random item: master_tx=0x%02h slave_tx=0x%02h",
+-                      item.master_tx_data,
+-                      item.slave_tx_data
+-                      ), UVM_LOW)
+-
+-            finish_item(item);
+-        end
+-    endtask
+-endclass  //className extends superClass
++`uvm_object_utils(spi_base_seq)
++function new(string name="spi_base_seq"); super.new(name); endfunction
++task body();
++ spi_seq_item item; int n=1; string phase_name; logic [7:0] pats[7]='{0,255,170,85,1,64,192};
++ void'($value$plusargs("N=%d",n)); void'($value$plusargs("PHASE=%s",phase_name));
++ for(int i=0;i<n;i++) begin
++ item=spi_seq_item::type_id::create("item"); start_item(item);
++ if(!item.randomize()) `uvm_fatal("RAND","randomization failed")
++ item.divider=(i%4==0)?4:((i%4==1)?5:((i%4==2)?20:255));
++ if(phase_name=="directed") begin
++ if(i<49) begin item.master_tx_data=pats[i/7];item.slave_tx_data=pats[i%7];end
++ else begin item.master_tx_data=8'h1<<(i%8);item.slave_tx_data=~item.master_tx_data;end
++ end
++ item.busy_start=(i%7==0);
++ if(phase_name=="boundary") item.divider=i%4;
++ finish_item(item);
++ end
++endtask
++endclass

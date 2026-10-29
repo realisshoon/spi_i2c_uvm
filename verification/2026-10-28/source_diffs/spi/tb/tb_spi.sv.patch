@@ -1,0 +1,15 @@
+--- baseline/tb/tb_spi.sv
++++ followup/tb/tb_spi.sv
+@@ -39,9 +39,8 @@
+     end
+ 
+     initial begin
+-        $fsdbDumpfile("./out/wave/tb_spi.fsdb");
+-        $fsdbDumpvars(0);
+-        $fsdbDumpMDA();
++        if ($test$plusargs("WAVE")) begin
++            $dumpfile("trace.vcd"); $dumpvars(0, tb_spi);
++        end
+     end
+-
+ endmodule

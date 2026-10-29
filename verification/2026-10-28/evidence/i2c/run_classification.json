@@ -1,0 +1,290 @@
+[
+  {
+    "run": "baseline_failure_s1_n14",
+    "phase": "failure",
+    "seed": 1,
+    "result_recorded": "FAIL",
+    "expected_failure": true,
+    "in_final_normal_101": false
+  },
+  {
+    "run": "distributed_directed_s10_n24",
+    "phase": "directed",
+    "seed": 10,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": true
+  },
+  {
+    "run": "distributed_intermediate_s12_n1000",
+    "phase": "intermediate",
+    "seed": 12,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": true
+  },
+  {
+    "run": "distributed_large_random_s101_n1000",
+    "phase": "large_random",
+    "seed": 101,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": true
+  },
+  {
+    "run": "distributed_large_random_s102_n1000",
+    "phase": "large_random",
+    "seed": 102,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": true
+  },
+  {
+    "run": "distributed_large_random_s103_n1000",
+    "phase": "large_random",
+    "seed": 103,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": true
+  },
+  {
+    "run": "distributed_large_random_s104_n1000",
+    "phase": "large_random",
+    "seed": 104,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": true
+  },
+  {
+    "run": "distributed_large_random_s105_n1000",
+    "phase": "large_random",
+    "seed": 105,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": true
+  },
+  {
+    "run": "distributed_large_random_s106_n1000",
+    "phase": "large_random",
+    "seed": 106,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": true
+  },
+  {
+    "run": "distributed_large_random_s107_n1000",
+    "phase": "large_random",
+    "seed": 107,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": true
+  },
+  {
+    "run": "distributed_large_random_s108_n1000",
+    "phase": "large_random",
+    "seed": 108,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": true
+  },
+  {
+    "run": "distributed_large_random_s109_n1000",
+    "phase": "large_random",
+    "seed": 109,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": true
+  },
+  {
+    "run": "distributed_large_random_s110_n1000",
+    "phase": "large_random",
+    "seed": 110,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": true
+  },
+  {
+    "run": "distributed_negative_s33_n1",
+    "phase": "negative",
+    "seed": 33,
+    "result_recorded": "FAIL",
+    "expected_failure": true,
+    "in_final_normal_101": false
+  },
+  {
+    "run": "distributed_reset_s22_n4",
+    "phase": "reset",
+    "seed": 22,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": true
+  },
+  {
+    "run": "distributed_small_random_s11_n100",
+    "phase": "small_random",
+    "seed": 11,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": true
+  },
+  {
+    "run": "distributed_smoke_s4_n12",
+    "phase": "smoke",
+    "seed": 4,
+    "result_recorded": "FAIL",
+    "expected_failure": false,
+    "in_final_normal_101": false
+  },
+  {
+    "run": "distributed_smoke_s5_n12",
+    "phase": "smoke",
+    "seed": 5,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": true
+  },
+  {
+    "run": "enhanced_smoke_s1_n4",
+    "phase": "smoke",
+    "seed": 1,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": false
+  },
+  {
+    "run": "final_smoke_s2_n4",
+    "phase": "smoke",
+    "seed": 2,
+    "result_recorded": "FAIL",
+    "expected_failure": false,
+    "in_final_normal_101": false
+  },
+  {
+    "run": "verified_directed_s10_n24",
+    "phase": "directed",
+    "seed": 10,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": false
+  },
+  {
+    "run": "verified_intermediate_s12_n1000",
+    "phase": "intermediate",
+    "seed": 12,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": false
+  },
+  {
+    "run": "verified_large_random_s101_n1000",
+    "phase": "large_random",
+    "seed": 101,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": false
+  },
+  {
+    "run": "verified_large_random_s102_n1000",
+    "phase": "large_random",
+    "seed": 102,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": false
+  },
+  {
+    "run": "verified_large_random_s103_n1000",
+    "phase": "large_random",
+    "seed": 103,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": false
+  },
+  {
+    "run": "verified_large_random_s104_n1000",
+    "phase": "large_random",
+    "seed": 104,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": false
+  },
+  {
+    "run": "verified_large_random_s105_n1000",
+    "phase": "large_random",
+    "seed": 105,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": false
+  },
+  {
+    "run": "verified_large_random_s106_n1000",
+    "phase": "large_random",
+    "seed": 106,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": false
+  },
+  {
+    "run": "verified_large_random_s107_n1000",
+    "phase": "large_random",
+    "seed": 107,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": false
+  },
+  {
+    "run": "verified_large_random_s108_n1000",
+    "phase": "large_random",
+    "seed": 108,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": false
+  },
+  {
+    "run": "verified_large_random_s109_n1000",
+    "phase": "large_random",
+    "seed": 109,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": false
+  },
+  {
+    "run": "verified_large_random_s110_n1000",
+    "phase": "large_random",
+    "seed": 110,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": false
+  },
+  {
+    "run": "verified_negative_s33_n1",
+    "phase": "negative",
+    "seed": 33,
+    "result_recorded": "FAIL",
+    "expected_failure": true,
+    "in_final_normal_101": false
+  },
+  {
+    "run": "verified_reset_s22_n4",
+    "phase": "reset",
+    "seed": 22,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": false
+  },
+  {
+    "run": "verified_small_random_s11_n100",
+    "phase": "small_random",
+    "seed": 11,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": false
+  },
+  {
+    "run": "verified_smoke_s3_n4",
+    "phase": "smoke",
+    "seed": 3,
+    "result_recorded": "PASS",
+    "expected_failure": false,
+    "in_final_normal_101": false
+  }
+]

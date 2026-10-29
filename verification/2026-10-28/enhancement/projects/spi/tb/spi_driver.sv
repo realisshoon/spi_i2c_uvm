@@ -1,0 +1,37 @@
+class spi_driver extends uvm_driver #(spi_seq_item);
+`uvm_component_utils(spi_driver)
+virtual spi_if s_if; int issued,aborted;
+function new(string name,uvm_component parent);super.new(name,parent);endfunction
+function void build_phase(uvm_phase phase);
+ if(!uvm_config_db#(virtual spi_if)::get(this,"","s_if",s_if)) `uvm_fatal("CFG","interface missing")
+endfunction
+task drive_transfer(spi_seq_item item);
+ bit md,sd; int cycles; string phase_name;
+ void'($value$plusargs("PHASE=%s",phase_name));
+ @(negedge s_if.clk); s_if.master_tx_data=item.master_tx_data;s_if.slave_tx_data=item.slave_tx_data;s_if.clk_div=item.divider;
+ s_if.start=1; @(negedge s_if.clk);s_if.start=0; issued++;
+ md=0;sd=0;cycles=0;
+ while(!(md&&sd)&&cycles<12000) begin
+ @(negedge s_if.clk);cycles++;
+ md|=(s_if.master_rx_done===1'b1);sd|=(s_if.slave_rx_done===1'b1);
+ if(item.busy_start&&cycles==10) s_if.start=1;
+ if(cycles==11) s_if.start=0;
+ end
+ if(!(md&&sd)) `uvm_fatal("TIMEOUT","SPI done missing")
+ repeat(12) @(negedge s_if.clk);
+endtask
+task run_phase(uvm_phase phase);
+ spi_seq_item item;
+ s_if.reset=1;s_if.start=0;s_if.clk_div=20;s_if.master_tx_data=0;s_if.slave_tx_data=0;s_if.cpol=0;s_if.cpha=0;
+ repeat(8) @(negedge s_if.clk);s_if.reset=0;repeat(8) @(negedge s_if.clk);
+ // Deliberate reset abort: no completed transaction is advertised.
+ if($test$plusargs("RESET_CASE")) begin
+ s_if.start=1;@(negedge s_if.clk);s_if.start=0;
+ if(!$test$plusargs("RESET_LOAD")) repeat(35) @(negedge s_if.clk);
+ s_if.reset=1;aborted++;repeat(5) @(negedge s_if.clk);
+ if(s_if.cs_n!==1||s_if.sclk!==0||s_if.master_tx_busy!==0) `uvm_error("RESET","idle reset outputs invalid")
+ s_if.reset=0;repeat(10) @(negedge s_if.clk);
+ end
+ forever begin seq_item_port.get_next_item(item);drive_transfer(item);seq_item_port.item_done();end
+endtask
+endclass

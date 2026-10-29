@@ -1,0 +1,15 @@
+--- baseline/tb/tb_i2c.sv
++++ followup/tb/tb_i2c.sv
+@@ -67,9 +67,8 @@
+     end
+ 
+     initial begin
+-        $fsdbDumpfile("./out/wave/tb_i2c.fsdb");
+-        $fsdbDumpvars(0);
+-        $fsdbDumpMDA();
++        if ($test$plusargs("WAVE")) begin
++            $dumpfile("trace.vcd"); $dumpvars(0, tb_i2c);
++        end
+     end
+-
+ endmodule

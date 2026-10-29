@@ -1,0 +1,52 @@
+class spi_monitor extends uvm_component;
+`uvm_component_utils(spi_monitor)
+virtual spi_if s_if;uvm_analysis_port #(spi_seq_item) ap;
+int attempts,assert_fails,completed;bit active;logic prev_sclk,prev_cs;spi_seq_item item;
+function new(string name="spi_monitor",uvm_component parent);super.new(name,parent);ap=new("ap",this);endfunction
+function void build_phase(uvm_phase phase);if(!uvm_config_db#(virtual spi_if)::get(this,"","s_if",s_if)) `uvm_fatal("CFG","interface missing") endfunction
+function void ck(bit ok,string msg);attempts++;if(!ok) begin assert_fails++;`uvm_error("PIN",msg) end endfunction
+task run_phase(uvm_phase phase);
+ int drain,edge_ticks; logic last_mosi;
+ prev_cs=1;prev_sclk=0;active=0;
+ forever begin
+ @(negedge s_if.clk);
+ if(s_if.reset) begin active=0;prev_cs=1;prev_sclk=0;end
+ else begin
+ if(prev_cs===1&&s_if.cs_n===0) begin
+ active=1;item=spi_seq_item::type_id::create("observed");
+ item.master_tx_data=s_if.master_tx_data;item.slave_tx_data=s_if.slave_tx_data;
+ item.pin_mosi=0;item.pin_miso=0;item.divider=s_if.clk_div;edge_ticks=-1;last_mosi=s_if.mosi;
+ end
+ if(active) begin
+ edge_ticks++;
+ if(prev_sclk!==s_if.sclk && s_if.cs_n===0) begin
+ ck(edge_ticks==int'(item.divider)+1,"nonterminal SCLK half-period differs from divider+1");edge_ticks=0;
+ end
+ if(prev_sclk===1&&s_if.sclk===1) ck(last_mosi===s_if.mosi,"MOSI changed during SCLK high");
+ last_mosi=s_if.mosi;
+ ck(!$isunknown({s_if.cs_n,s_if.sclk,s_if.mosi,s_if.miso}),"X/Z on active SPI pins");
+ if(prev_sclk===0&&s_if.sclk===1) begin
+ item.pin_mosi={item.pin_mosi[6:0],s_if.mosi};item.pin_miso={item.pin_miso[6:0],s_if.miso};item.rise_count++;
+ end
+ if(s_if.master_rx_done===1) item.master_done_count++;
+ if(s_if.slave_rx_done===1) item.slave_done_count++;
+ if(prev_cs===0&&s_if.cs_n===1) begin
+ ck(edge_ticks==int'(item.divider)+1,"terminal SCLK high pulse truncated");
+ ck(item.rise_count==8,"CS interval must have eight rising edges");
+ ck(s_if.sclk===0,"SCLK must return to CPOL0");
+ for(drain=0;drain<8;drain++) begin
+ @(negedge s_if.clk);
+ if(s_if.master_rx_done===1) item.master_done_count++;
+ if(s_if.slave_rx_done===1) item.slave_done_count++;
+ end
+ item.master_rx_data=s_if.master_rx_data;item.slave_rx_data=s_if.slave_rx_data;
+ ck(item.master_done_count==1&&item.slave_done_count==1,"missing or duplicate done");
+ if($test$plusargs("NEGATIVE")) item.pin_mosi^=1;
+ completed++;ap.write(item);active=0;
+ end
+ end
+ prev_cs=s_if.cs_n;prev_sclk=s_if.sclk;
+ end
+ end
+endtask
+endclass

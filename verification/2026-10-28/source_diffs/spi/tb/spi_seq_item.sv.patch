@@ -1,0 +1,13 @@
+--- baseline/tb/spi_seq_item.sv
++++ followup/tb/spi_seq_item.sv
+@@ -2,6 +2,10 @@
+     rand logic [7:0] master_tx_data;
+     rand logic [7:0] slave_tx_data;
+ 
++    rand logic [7:0] divider;
++    bit busy_start;
++    logic [7:0] pin_mosi, pin_miso;
++    int rise_count, master_done_count, slave_done_count;
+     logic [7:0] master_rx_data;
+     logic [7:0] slave_rx_data;
+ 

@@ -1,0 +1,13 @@
+--- baseline/rtl/i2c_master_slave_top.sv
++++ followup/rtl/i2c_master_slave_top.sv
+@@ -70,8 +70,8 @@
+         .tx_data(master_tx_data),
+         .rx_data(master_rx_data),
+ 
+-        .ack_in (master_read_ack),
+-        .ack_out(slave_ack_received),
++        .ack_in (ack_in),
++        .ack_out(ack_out),
+ 
+         .busy(master_busy),
+         .done(master_done),

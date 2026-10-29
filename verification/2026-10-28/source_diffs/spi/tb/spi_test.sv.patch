@@ -1,0 +1,11 @@
+--- baseline/tb/spi_test.sv
++++ followup/tb/spi_test.sv
+@@ -27,6 +27,8 @@
+ 
+         `uvm_info("TEST", "SPI sequence done", UVM_LOW)
+ 
++        if(env.agent.driver.issued!=env.agent.monitor.completed) `uvm_error("DRAIN","issued/completed mismatch")
++        `uvm_info("RESULT",$sformatf("issued=%0d completed=%0d checks=%0d passes=%0d fails=%0d attempts=%0d assert_fails=%0d aborted=%0d",env.agent.driver.issued,env.agent.monitor.completed,env.scoreboard.pass_cnt+env.scoreboard.fail_cnt,env.scoreboard.pass_cnt,env.scoreboard.fail_cnt,env.agent.monitor.attempts,env.agent.monitor.assert_fails,env.agent.driver.aborted),UVM_NONE)
+         phase.drop_objection(this);
+     endtask
+ 

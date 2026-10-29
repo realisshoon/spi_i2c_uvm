@@ -1,0 +1,11 @@
+--- baseline/tb/i2c_test.sv
++++ followup/tb/i2c_test.sv
+@@ -25,6 +25,8 @@
+         // 마지막 transaction 결과 정리 여유
+         #1000;
+ 
++        if(env.agt.drv.issued!=env.agt.mon.completed) `uvm_error("DRAIN","issued/completed mismatch")
++        `uvm_info("RESULT",$sformatf("issued=%0d completed=%0d checks=%0d passes=%0d fails=%0d attempts=%0d assert_fails=%0d aborted=%0d",env.agt.drv.issued,env.agt.mon.completed,env.scb.checks,env.scb.pass_cnt,env.scb.fail_cnt,env.agt.mon.attempts,env.agt.mon.assert_fails,env.agt.drv.aborted),UVM_NONE)
+         phase.drop_objection(this);
+     endtask
+ 

@@ -1,0 +1,440 @@
+--- baseline/rtl/spi_master.sv
++++ enhanced/rtl/spi_master.sv
+@@ -75,7 +75,7 @@
+         half_tick      = 1'b0;
+ 
+         // half tick generation
+-        if (c_state == DATA) begin
++        if (c_state == DATA || c_state == STOP) begin
+             if (c_div_cnt == c_clk_div) begin
+                 n_div_cnt = 8'd0;
+                 half_tick = 1'b1;
+@@ -138,12 +138,15 @@
+             end
+ 
+             STOP: begin
++              // Complete the last programmed high half-period before CS release.
++              if (half_tick) begin
+                 n_sclk    = 1'b0;
+                 n_cs_n    = 1'b1;
+                 n_tx_busy = 1'b0;
+                 n_rx_done = 1'b1;
+                 n_mosi    = 1'b0;
+                 n_state   = IDLE;
++              end
+             end
+ 
+             default: begin
+--- baseline/tb/spi_coverage.sv
++++ enhanced/tb/spi_coverage.sv
+@@ -7,6 +7,12 @@
+     logic       cov_m2s_match;
+     logic       cov_s2m_match;
+ 
++    int ext_divider; bit ext_busy;
++    covergroup enhanced_cg;
++      option.per_instance=1;
++      divider:coverpoint ext_divider {bins min_sync={4};bins next={5};bins legacy={20};bins max={255};}
++      master_walk:coverpoint cov_master_tx_data {bins onehot[]={1,2,4,8,16,32,64,128};bins zerohot[]={254,253,251,247,239,223,191,127};}
++    endgroup
+     covergroup spi_cg;
+         option.per_instance = 1;
+ 
+@@ -40,7 +46,7 @@
+ 
+     function new(string name = "spi_coverage", uvm_component parent);
+         super.new(name, parent);
+-        spi_cg = new();
++        spi_cg = new(); enhanced_cg=new();
+     endfunction
+ 
+     virtual function void write(spi_seq_item t);
+@@ -51,7 +57,7 @@
+         cov_m2s_match = (t.slave_rx_data === t.master_tx_data);
+         cov_s2m_match = (t.master_rx_data === t.slave_tx_data);
+ 
+-        spi_cg.sample();
++        spi_cg.sample(); ext_divider=t.divider; enhanced_cg.sample();
+ 
+         `uvm_info("COV", $sformatf(
+                   "Sample coverage: master_tx=0x%02h slave_tx=0x%02h m2s_match=%0d s2m_match=%0d coverage=%0.2f%%",
+@@ -60,12 +66,13 @@
+                   cov_m2s_match,
+                   cov_s2m_match,
+                   spi_cg.get_inst_coverage()
+-                  ), UVM_LOW)
++                  ), UVM_HIGH)
+ 
+     endfunction
+ 
+     virtual function void report_phase(uvm_phase phase);
+         super.report_phase(phase);
++        `uvm_info("EXT_COV",$sformatf("SPI enhanced coverage=%0.2f",enhanced_cg.get_inst_coverage()),UVM_NONE)
+ 
+         `uvm_info("COV", $sformatf(
+                   "Final SPI functional coverage = %0.2f%%", spi_cg.get_inst_coverage()), UVM_NONE)
+--- baseline/tb/spi_driver.sv
++++ enhanced/tb/spi_driver.sv
+@@ -1,59 +1,37 @@
+ class spi_driver extends uvm_driver #(spi_seq_item);
+-    `uvm_component_utils(spi_driver)
+-
+-    virtual spi_if s_if;
+-    function new(string name, uvm_component parent);
+-        super.new(name, parent);
+-    endfunction  //new()
+-
+-    function void build_phase(uvm_phase phase);
+-        super.build_phase(phase);
+-        if (!uvm_config_db#(virtual spi_if)::get(this, "", "s_if", s_if)) begin
+-            `uvm_fatal(get_type_name(), "virtual interface를 config_db에서 찾지 못함")
+-        end
+-    endfunction
+-
+-    task drive_transfer(spi_seq_item item);
+-        `uvm_info(get_type_name(), $sformatf(
+-                                       "Drive SPI tansfer: master_tx = 0x%02h slave_tx =0x%02h",
+-                                       item.master_tx_data, item.slave_tx_data), UVM_LOW)
+-        @(s_if.drv_cb);
+-        s_if.drv_cb.master_tx_data <= item.master_tx_data;
+-        s_if.drv_cb.slave_tx_data  <= item.slave_tx_data;
+-
+-        @(s_if.drv_cb);
+-        s_if.drv_cb.start <= 1'b1;
+-
+-        @(s_if.drv_cb);
+-        s_if.drv_cb.start <= 1'b0;
+-
+-        wait (s_if.drv_cb.master_rx_done == 1'b1);
+-        wait (s_if.drv_cb.slave_rx_done == 1'b1);
+-
+-        repeat (5) @(s_if.drv_cb);
+-    endtask
+-
+-    task run_phase(uvm_phase phase);
+-        spi_seq_item item;
+-
+-        s_if.drv_cb.reset          <= 1'b1;
+-        s_if.drv_cb.start          <= 1'b0;
+-        s_if.drv_cb.cpol           <= 1'b0;
+-        s_if.drv_cb.cpha           <= 1'b0;
+-        s_if.drv_cb.clk_div        <= 8'd20;
+-        s_if.drv_cb.master_tx_data <= 8'd0;
+-        s_if.drv_cb.slave_tx_data  <= 8'd0;
+-
+-        repeat (5) @(s_if.drv_cb);
+-        s_if.drv_cb.reset <= 1'b0;
+-        repeat (5) @(s_if.drv_cb);
+-
+-        forever begin
+-            seq_item_port.get_next_item(item);
+-            drive_transfer(item);
+-            seq_item_port.item_done();
+-        end
+-
+-    endtask  // run_phase(uvm_phase phase);
+-
+-endclass  //className extends superClass
++`uvm_component_utils(spi_driver)
++virtual spi_if s_if; int issued,aborted;
++function new(string name,uvm_component parent);super.new(name,parent);endfunction
++function void build_phase(uvm_phase phase);
++ if(!uvm_config_db#(virtual spi_if)::get(this,"","s_if",s_if)) `uvm_fatal("CFG","interface missing")
++endfunction
++task drive_transfer(spi_seq_item item);
++ bit md,sd; int cycles; string phase_name;
++ void'($value$plusargs("PHASE=%s",phase_name));
++ @(negedge s_if.clk); s_if.master_tx_data=item.master_tx_data;s_if.slave_tx_data=item.slave_tx_data;s_if.clk_div=item.divider;
++ s_if.start=1; @(negedge s_if.clk);s_if.start=0; issued++;
++ md=0;sd=0;cycles=0;
++ while(!(md&&sd)&&cycles<12000) begin
++ @(negedge s_if.clk);cycles++;
++ md|=(s_if.master_rx_done===1'b1);sd|=(s_if.slave_rx_done===1'b1);
++ if(item.busy_start&&cycles==10) s_if.start=1;
++ if(cycles==11) s_if.start=0;
++ end
++ if(!(md&&sd)) `uvm_fatal("TIMEOUT","SPI done missing")
++ repeat(12) @(negedge s_if.clk);
++endtask
++task run_phase(uvm_phase phase);
++ spi_seq_item item;
++ s_if.reset=1;s_if.start=0;s_if.clk_div=20;s_if.master_tx_data=0;s_if.slave_tx_data=0;s_if.cpol=0;s_if.cpha=0;
++ repeat(8) @(negedge s_if.clk);s_if.reset=0;repeat(8) @(negedge s_if.clk);
++ // Deliberate reset abort: no completed transaction is advertised.
++ if($test$plusargs("RESET_CASE")) begin
++ s_if.start=1;@(negedge s_if.clk);s_if.start=0;
++ if(!$test$plusargs("RESET_LOAD")) repeat(35) @(negedge s_if.clk);
++ s_if.reset=1;aborted++;repeat(5) @(negedge s_if.clk);
++ if(s_if.cs_n!==1||s_if.sclk!==0||s_if.master_tx_busy!==0) `uvm_error("RESET","idle reset outputs invalid")
++ s_if.reset=0;repeat(10) @(negedge s_if.clk);
++ end
++ forever begin seq_item_port.get_next_item(item);drive_transfer(item);seq_item_port.item_done();end
++endtask
++endclass
+--- baseline/tb/spi_monitor.sv
++++ enhanced/tb/spi_monitor.sv
+@@ -1,65 +1,52 @@
+ class spi_monitor extends uvm_component;
+-
+-    `uvm_component_utils(spi_monitor)
+-
+-    virtual spi_if s_if;
+-
+-    uvm_analysis_port #(spi_seq_item) ap;
+-
+-    function new(string name = "spi_monitor", uvm_component parent);
+-        super.new(name, parent);
+-        ap = new("ap", this);
+-    endfunction
+-
+-    virtual function void build_phase(uvm_phase phase);
+-        super.build_phase(phase);
+-
+-        if (!uvm_config_db#(virtual spi_if)::get(this, "", "s_if", s_if)) begin
+-            `uvm_fatal("MON", "Failed to get virtual interface")
+-        end
+-    endfunction
+-
+-    virtual task run_phase(uvm_phase phase);
+-        spi_seq_item item;
+-
+-        forever begin
+-            // transaction 시작 감지
+-            wait (s_if.mon_cb.start == 1'b1);
+-
+-            item = spi_seq_item::type_id::create("item");
+-
+-            // 입력값 캡처
+-            item.master_tx_data = s_if.mon_cb.master_tx_data;
+-            item.slave_tx_data = s_if.mon_cb.slave_tx_data;
+-
+-            `uvm_info("MON", $sformatf(
+-                      "Transaction start: master_tx=0x%02h slave_tx=0x%02h",
+-                      item.master_tx_data,
+-                      item.slave_tx_data
+-                      ), UVM_LOW)
+-
+-            // 전송 완료 대기
+-            wait (s_if.mon_cb.master_rx_done == 1'b1);
+-            wait (s_if.mon_cb.slave_rx_done == 1'b1);
+-
+-            // done 뜬 다음 안정적으로 1클럭 뒤 샘플
+-            @(s_if.mon_cb);
+-
+-            item.master_rx_data = s_if.mon_cb.master_rx_data;
+-            item.slave_rx_data  = s_if.mon_cb.slave_rx_data;
+-
+-            `uvm_info(get_type_name(), $sformatf(
+-                      "Transaction done: master_rx=0x%02h slave_rx=0x%02h",
+-                      item.master_rx_data,
+-                      item.slave_rx_data
+-                      ), UVM_LOW)
+-
+-            // scoreboard로 transaction 전달
+-            ap.write(item);
+-
+-            // start가 내려갈 시간 확보
+-            repeat (2) @(s_if.mon_cb);
+-        end
+-    endtask
+-
++`uvm_component_utils(spi_monitor)
++virtual spi_if s_if;uvm_analysis_port #(spi_seq_item) ap;
++int attempts,assert_fails,completed;bit active;logic prev_sclk,prev_cs;spi_seq_item item;
++function new(string name="spi_monitor",uvm_component parent);super.new(name,parent);ap=new("ap",this);endfunction
++function void build_phase(uvm_phase phase);if(!uvm_config_db#(virtual spi_if)::get(this,"","s_if",s_if)) `uvm_fatal("CFG","interface missing") endfunction
++function void ck(bit ok,string msg);attempts++;if(!ok) begin assert_fails++;`uvm_error("PIN",msg) end endfunction
++task run_phase(uvm_phase phase);
++ int drain,edge_ticks; logic last_mosi;
++ prev_cs=1;prev_sclk=0;active=0;
++ forever begin
++ @(negedge s_if.clk);
++ if(s_if.reset) begin active=0;prev_cs=1;prev_sclk=0;end
++ else begin
++ if(prev_cs===1&&s_if.cs_n===0) begin
++ active=1;item=spi_seq_item::type_id::create("observed");
++ item.master_tx_data=s_if.master_tx_data;item.slave_tx_data=s_if.slave_tx_data;
++ item.pin_mosi=0;item.pin_miso=0;item.divider=s_if.clk_div;edge_ticks=-1;last_mosi=s_if.mosi;
++ end
++ if(active) begin
++ edge_ticks++;
++ if(prev_sclk!==s_if.sclk && s_if.cs_n===0) begin
++ ck(edge_ticks==int'(item.divider)+1,"nonterminal SCLK half-period differs from divider+1");edge_ticks=0;
++ end
++ if(prev_sclk===1&&s_if.sclk===1) ck(last_mosi===s_if.mosi,"MOSI changed during SCLK high");
++ last_mosi=s_if.mosi;
++ ck(!$isunknown({s_if.cs_n,s_if.sclk,s_if.mosi,s_if.miso}),"X/Z on active SPI pins");
++ if(prev_sclk===0&&s_if.sclk===1) begin
++ item.pin_mosi={item.pin_mosi[6:0],s_if.mosi};item.pin_miso={item.pin_miso[6:0],s_if.miso};item.rise_count++;
++ end
++ if(s_if.master_rx_done===1) item.master_done_count++;
++ if(s_if.slave_rx_done===1) item.slave_done_count++;
++ if(prev_cs===0&&s_if.cs_n===1) begin
++ ck(edge_ticks==int'(item.divider)+1,"terminal SCLK high pulse truncated");
++ ck(item.rise_count==8,"CS interval must have eight rising edges");
++ ck(s_if.sclk===0,"SCLK must return to CPOL0");
++ for(drain=0;drain<8;drain++) begin
++ @(negedge s_if.clk);
++ if(s_if.master_rx_done===1) item.master_done_count++;
++ if(s_if.slave_rx_done===1) item.slave_done_count++;
++ end
++ item.master_rx_data=s_if.master_rx_data;item.slave_rx_data=s_if.slave_rx_data;
++ ck(item.master_done_count==1&&item.slave_done_count==1,"missing or duplicate done");
++ if($test$plusargs("NEGATIVE")) item.pin_mosi^=1;
++ completed++;ap.write(item);active=0;
++ end
++ end
++ prev_cs=s_if.cs_n;prev_sclk=s_if.sclk;
++ end
++ end
++endtask
+ endclass
+--- baseline/tb/spi_scoreboard.sv
++++ enhanced/tb/spi_scoreboard.sv
+@@ -19,8 +19,8 @@
+         bit slave_rx_pass;
+         bit master_rx_pass;
+ 
+-        slave_rx_pass  = (item.slave_rx_data === item.master_tx_data);
+-        master_rx_pass = (item.master_rx_data === item.slave_tx_data);
++        slave_rx_pass = !$isunknown({item.slave_rx_data,item.master_tx_data,item.pin_mosi}) && (item.slave_rx_data === item.master_tx_data) && (item.pin_mosi === item.master_tx_data);
++        master_rx_pass = !$isunknown({item.master_rx_data,item.slave_tx_data,item.pin_miso}) && (item.master_rx_data === item.slave_tx_data) && (item.pin_miso === item.slave_tx_data);
+ 
+         if (!slave_rx_pass) begin
+             fail_cnt++;
+@@ -32,7 +32,7 @@
+                       "PASS Slave RX | master_tx=0x%02h, slave_rx=0x%02h",
+                       item.master_tx_data,
+                       item.slave_rx_data
+-                      ), UVM_LOW)
++                      ), UVM_HIGH)
+         end
+ 
+         if (!master_rx_pass) begin
+@@ -45,7 +45,7 @@
+                       "PASS Master RX | slave_tx=0x%02h, master_rx=0x%02h",
+                       item.slave_tx_data,
+                       item.master_rx_data
+-                      ), UVM_LOW)
++                      ), UVM_HIGH)
+         end
+ 
+     endfunction
+--- baseline/tb/spi_seq_item.sv
++++ enhanced/tb/spi_seq_item.sv
+@@ -2,6 +2,10 @@
+     rand logic [7:0] master_tx_data;
+     rand logic [7:0] slave_tx_data;
+ 
++    rand logic [7:0] divider;
++    bit busy_start;
++    logic [7:0] pin_mosi, pin_miso;
++    int rise_count, master_done_count, slave_done_count;
+     logic [7:0] master_rx_data;
+     logic [7:0] slave_rx_data;
+ 
+--- baseline/tb/spi_sequence.sv
++++ enhanced/tb/spi_sequence.sv
+@@ -1,57 +1,20 @@
+ class spi_base_seq extends uvm_sequence #(spi_seq_item);
+-    `uvm_object_utils(spi_base_seq)
+-    function new(string name = "spi_base_seq");
+-        super.new(name);
+-    endfunction  //new()
+-
+-
+-    virtual task body();
+-        spi_seq_item item;
+-
+-        // Directed test 1: AA <-> 55
+-        item = spi_seq_item::type_id::create("item");
+-        start_item(item);
+-        item.master_tx_data = 8'hAA;
+-        item.slave_tx_data  = 8'h55;
+-        finish_item(item);
+-
+-        // Directed test 2: FF <-> 00
+-        item = spi_seq_item::type_id::create("item");
+-        start_item(item);
+-        item.master_tx_data = 8'hFF;
+-        item.slave_tx_data  = 8'h00;
+-        finish_item(item);
+-
+-        // Directed test 3: 00 <-> FF
+-        item = spi_seq_item::type_id::create("item");
+-        start_item(item);
+-        item.master_tx_data = 8'h00;
+-        item.slave_tx_data  = 8'hFF;
+-        finish_item(item);
+-
+-        // Directed test 4: 3C <-> C3
+-        item = spi_seq_item::type_id::create("item");
+-        start_item(item);
+-        item.master_tx_data = 8'h3C;
+-        item.slave_tx_data  = 8'hC3;
+-        finish_item(item);
+-
+-        // Random test
+-        repeat (20) begin
+-            item = spi_seq_item::type_id::create("item");
+-            start_item(item);
+-
+-            if (!item.randomize()) begin
+-                `uvm_error("SEQ", "Randomization failed")
+-            end
+-
+-            `uvm_info("SEQ", $sformatf(
+-                      "Random item: master_tx=0x%02h slave_tx=0x%02h",
+-                      item.master_tx_data,
+-                      item.slave_tx_data
+-                      ), UVM_LOW)
+-
+-            finish_item(item);
+-        end
+-    endtask
+-endclass  //className extends superClass
++`uvm_object_utils(spi_base_seq)
++function new(string name="spi_base_seq"); super.new(name); endfunction
++task body();
++ spi_seq_item item; int n=1; string phase_name; logic [7:0] pats[7]='{0,255,170,85,1,64,192};
++ void'($value$plusargs("N=%d",n)); void'($value$plusargs("PHASE=%s",phase_name));
++ for(int i=0;i<n;i++) begin
++ item=spi_seq_item::type_id::create("item"); start_item(item);
++ if(!item.randomize()) `uvm_fatal("RAND","randomization failed")
++ item.divider=(i%4==0)?4:((i%4==1)?5:((i%4==2)?20:255));
++ if(phase_name=="directed") begin
++ if(i<49) begin item.master_tx_data=pats[i/7];item.slave_tx_data=pats[i%7];end
++ else begin item.master_tx_data=8'h1<<(i%8);item.slave_tx_data=~item.master_tx_data;end
++ end
++ item.busy_start=(i%7==0);
++ if(phase_name=="boundary") item.divider=i%4;
++ finish_item(item);
++ end
++endtask
++endclass
+--- baseline/tb/spi_test.sv
++++ enhanced/tb/spi_test.sv
+@@ -27,6 +27,8 @@
+ 
+         `uvm_info("TEST", "SPI sequence done", UVM_LOW)
+ 
++        if(env.agent.driver.issued!=env.agent.monitor.completed) `uvm_error("DRAIN","issued/completed mismatch")
++        `uvm_info("RESULT",$sformatf("issued=%0d completed=%0d checks=%0d passes=%0d fails=%0d attempts=%0d assert_fails=%0d aborted=%0d",env.agent.driver.issued,env.agent.monitor.completed,env.scoreboard.pass_cnt+env.scoreboard.fail_cnt,env.scoreboard.pass_cnt,env.scoreboard.fail_cnt,env.agent.monitor.attempts,env.agent.monitor.assert_fails,env.agent.driver.aborted),UVM_NONE)
+         phase.drop_objection(this);
+     endtask
+ 
+--- baseline/tb/tb_spi.sv
++++ enhanced/tb/tb_spi.sv
+@@ -39,9 +39,8 @@
+     end
+ 
+     initial begin
+-        $fsdbDumpfile("./out/wave/tb_spi.fsdb");
+-        $fsdbDumpvars(0);
+-        $fsdbDumpMDA();
++        if ($test$plusargs("WAVE")) begin
++            $dumpfile("trace.vcd"); $dumpvars(0, tb_spi);
++        end
+     end
+-
+ endmodule

@@ -1,0 +1,898 @@
+--- baseline/rtl/i2c_master_slave_top.sv
++++ enhanced/rtl/i2c_master_slave_top.sv
+@@ -70,8 +70,8 @@
+         .tx_data(master_tx_data),
+         .rx_data(master_rx_data),
+ 
+-        .ack_in (master_read_ack),
+-        .ack_out(slave_ack_received),
++        .ack_in (ack_in),
++        .ack_out(ack_out),
+ 
+         .busy(master_busy),
+         .done(master_done),
+--- baseline/tb/i2c_coverage.sv
++++ enhanced/tb/i2c_coverage.sv
+@@ -4,6 +4,13 @@
+ 
+     i2c_seq_item item;
+ 
++    covergroup enhanced_cg;
++      option.per_instance=1;
++      addr:coverpoint item.slave_addr {bins target={7'h12};bins low={0};bins high={127};bins below={7'h11};bins above={7'h13};}
++      ack:coverpoint item.read_ack iff(item.op==i2c_seq_item::I2C_READ&&item.slave_addr==7'h12) {bins ack={0};bins nack={1};}
++      direction:coverpoint item.op;
++      address_direction:cross addr,direction;
++    endgroup
+     covergroup i2c_cg;
+         option.per_instance = 1;  // coverage instance 별로 계산
+ 
+@@ -52,18 +59,19 @@
+ 
+     function new(string name = "i2c_coverage", uvm_component parent = null);
+         super.new(name, parent);
+-        i2c_cg = new();
++        i2c_cg = new(); enhanced_cg=new();
+     endfunction
+ 
+     virtual function void write(i2c_seq_item t);
+         item = t;
+-        i2c_cg.sample();
++        i2c_cg.sample(); enhanced_cg.sample();
+ 
+         `uvm_info("COV", $sformatf("Sample coverage: %s", item.convert2string()), UVM_MEDIUM)
+     endfunction
+ 
+     function void report_phase(uvm_phase phase);
+         super.report_phase(phase);
++        `uvm_info("EXT_COV",$sformatf("I2C enhanced coverage=%0.2f",enhanced_cg.get_inst_coverage()),UVM_NONE)
+ 
+         `uvm_info("COV", "========================================", UVM_NONE)
+         `uvm_info("COV", $sformatf(
+--- baseline/tb/i2c_driver.sv
++++ enhanced/tb/i2c_driver.sv
+@@ -1,250 +1,38 @@
+ class i2c_driver extends uvm_driver #(i2c_seq_item);
+-
+-    `uvm_component_utils(i2c_driver)
+-
+-    virtual i2c_if vif;
+-
+-    function new(string name = "i2c_driver", uvm_component parent = null);
+-        super.new(name, parent);
+-    endfunction
+-
+-    function void build_phase(uvm_phase phase);
+-        super.build_phase(phase);
+-
+-        if (!uvm_config_db#(virtual i2c_if)::get(this, "", "vif", vif)) begin
+-            `uvm_fatal("DRV", "Failed to get virtual interface")
+-        end
+-    endfunction
+-
+-    // ------------------------------------------------------------
+-    // 초기 idle 상태
+-    // ------------------------------------------------------------
+-    task drive_idle();
+-        begin
+-            vif.drv_cb.cmd_start       <= 1'b0;
+-            vif.drv_cb.cmd_write       <= 1'b0;
+-            vif.drv_cb.cmd_read        <= 1'b0;
+-            vif.drv_cb.cmd_stop        <= 1'b0;
+-
+-            vif.drv_cb.master_tx_data  <= 8'd0;
+-
+-            // 1byte read 후 NACK이 기본
+-            vif.drv_cb.master_read_ack <= 1'b1;
+-
+-            vif.drv_cb.slave_tx_data   <= 8'd0;
+-        end
+-    endtask
+-
+-    // ------------------------------------------------------------
+-    // command 완료 대기
+-    // ------------------------------------------------------------
+-    task wait_done_timeout(string tag, int max_cycles = 300000);
+-        int cnt;
+-        begin
+-            cnt = 0;
+-
+-            while ((vif.mon_cb.master_done !== 1'b1) && (cnt < max_cycles)) begin
+-                @(vif.mon_cb);
+-                cnt++;
+-            end
+-
+-            if (cnt >= max_cycles) begin
+-                `uvm_error("DRV", $sformatf(
+-                                      "TIMEOUT waiting master_done: %s busy=%0b scl=%0b sda=%0b",
+-                                      tag, vif.mon_cb.master_busy, vif.mon_cb.scl, vif.mon_cb.sda))
+-            end
+-
+-            @(vif.drv_cb);
+-        end
+-    endtask
+-
+-    // ------------------------------------------------------------
+-    // START command
+-    // ------------------------------------------------------------
+-    task i2c_start();
+-        begin
+-            `uvm_info("DRV", "CMD START", UVM_MEDIUM)
+-
+-            @(vif.drv_cb);
+-            vif.drv_cb.cmd_start <= 1'b1;
+-
+-            repeat (2) @(vif.drv_cb);
+-            vif.drv_cb.cmd_start <= 1'b0;
+-
+-            wait_done_timeout("START");
+-        end
+-    endtask
+-
+-    // ------------------------------------------------------------
+-    // WRITE command
+-    // address byte도 Master가 SDA에 쓰는 값이므로 이 task 사용
+-    // ------------------------------------------------------------
+-    task i2c_write(input logic [7:0] data);
+-        begin
+-            `uvm_info("DRV", $sformatf("CMD WRITE data=0x%02h", data), UVM_MEDIUM)
+-
+-            @(vif.drv_cb);
+-            vif.drv_cb.master_tx_data <= data;
+-            vif.drv_cb.cmd_write      <= 1'b1;
+-
+-            repeat (2) @(vif.drv_cb);
+-            vif.drv_cb.cmd_write <= 1'b0;
+-
+-            wait_done_timeout($sformatf("WRITE 0x%02h", data));
+-
+-            // Slave ACK 확인
+-            // ACK=0, NACK=1
+-            // if (vif.mon_cb.slave_ack_received !== 1'b0) begin
+-            //     `uvm_error("DRV",
+-            //                $sformatf(
+-            //                    "NACK detected after WRITE data=0x%02h, slave_ack_received=%0b",
+-            //                    data, vif.mon_cb.slave_ack_received))
+-            // end
+-
+-
+-            // ACK는 monitor/scoreboard에서 검증하도록 하고,
+-            // driver에서는 command 완료 로그만 남긴다.
+-            `uvm_info(
+-                "DRV", $sformatf(
+-                "WRITE done data=0x%02h, slave_ack_received=%b", data, vif.mon_cb.slave_ack_received
+-                ), UVM_MEDIUM)
+-        end
+-    endtask
+-
+-    // ------------------------------------------------------------
+-    // READ command
+-    // master_ack_value: ACK=0, NACK=1
+-    // 1byte만 읽을 때는 NACK=1
+-    // ------------------------------------------------------------
+-    task i2c_read(input logic master_ack_value);
+-        begin
+-            `uvm_info("DRV", $sformatf("CMD READ master_read_ack=%0b", master_ack_value),
+-                      UVM_MEDIUM)
+-
+-            @(vif.drv_cb);
+-            vif.drv_cb.master_read_ack <= master_ack_value;
+-            vif.drv_cb.cmd_read        <= 1'b1;
+-
+-            repeat (2) @(vif.drv_cb);
+-            vif.drv_cb.cmd_read <= 1'b0;
+-
+-            wait_done_timeout("READ");
+-        end
+-    endtask
+-
+-    // ------------------------------------------------------------
+-    // STOP command
+-    // STOP은 done 또는 busy=0이면 완료로 인정
+-    // ------------------------------------------------------------
+-    task i2c_stop();
+-        int cnt;
+-        begin
+-            `uvm_info("DRV", "CMD STOP", UVM_MEDIUM)
+-
+-            @(vif.drv_cb);
+-            vif.drv_cb.cmd_stop <= 1'b1;
+-
+-            repeat (2) @(vif.drv_cb);
+-            vif.drv_cb.cmd_stop <= 1'b0;
+-
+-            cnt = 0;
+-
+-            while ((vif.mon_cb.master_done !== 1'b1) &&
+-                   (vif.mon_cb.master_busy !== 1'b0) &&
+-                   (cnt < 300000)) begin
+-                @(vif.mon_cb);
+-                cnt++;
+-            end
+-
+-            if (cnt >= 300000) begin
+-                `uvm_error("DRV", $sformatf("TIMEOUT waiting STOP busy=%0b scl=%0b sda=%0b",
+-                                            vif.mon_cb.master_busy, vif.mon_cb.scl, vif.mon_cb.sda))
+-            end
+-
+-            @(vif.drv_cb);
+-        end
+-    endtask
+-
+-    // ------------------------------------------------------------
+-    // item 하나 수행
+-    // ------------------------------------------------------------
+-    task drive_item(i2c_seq_item item);
+-        begin
+-            case (item.op)
+-
+-                i2c_seq_item::I2C_WRITE: begin
+-                    `uvm_info("DRV", $sformatf(
+-                              "Drive WRITE transaction: addr=0x%02h write_data=0x%02h",
+-                              item.slave_addr,
+-                              item.write_data
+-                              ), UVM_LOW)
+-
+-                    i2c_start();
+-
+-                    // Address + Write
+-                    // {7'h12, 1'b0} = 8'h24
+-                    i2c_write({item.slave_addr, 1'b0});
+-
+-                    // Data byte
+-                    i2c_write(item.write_data);
+-
+-                    i2c_stop();
+-                end
+-
+-                i2c_seq_item::I2C_READ: begin
+-                    `uvm_info("DRV", $sformatf(
+-                              "Drive READ transaction: addr=0x%02h slave_tx_data=0x%02h",
+-                              item.slave_addr,
+-                              item.slave_tx_data
+-                              ), UVM_LOW)
+-
+-                    // Slave가 read 때 Master에게 줄 값 세팅
+-                    @(vif.drv_cb);
+-                    vif.drv_cb.slave_tx_data <= item.slave_tx_data;
+-
+-                    repeat (20) @(vif.drv_cb);
+-
+-                    i2c_start();
+-
+-                    // Address + Read
+-                    // {7'h12, 1'b1} = 8'h25
+-                    i2c_write({item.slave_addr, 1'b1});
+-
+-                    // 1byte만 읽고 끝내므로 Master NACK
+-                    i2c_read(1'b1);
+-
+-                    i2c_stop();
+-                end
+-
+-                default: begin
+-                    `uvm_error("DRV", "Unknown I2C operation")
+-                end
+-
+-            endcase
+-        end
+-    endtask
+-
+-    // ------------------------------------------------------------
+-    // run_phase
+-    // ------------------------------------------------------------
+-    virtual task run_phase(uvm_phase phase);
+-        i2c_seq_item item;
+-
+-        drive_idle();
+-
+-        wait (vif.reset == 1'b0);
+-        repeat (10) @(vif.drv_cb);
+-
+-        forever begin
+-            seq_item_port.get_next_item(item);
+-
+-            `uvm_info("DRV", $sformatf("Received item from sequencer: %s", item.convert2string()),
+-                      UVM_LOW)
+-
+-            drive_item(item);
+-
+-            seq_item_port.item_done();
+-        end
+-    endtask
+-
++`uvm_component_utils(i2c_driver)
++virtual i2c_if vif;int issued,aborted;
++function new(string name,uvm_component parent);super.new(name,parent);endfunction
++function void build_phase(uvm_phase phase);if(!uvm_config_db#(virtual i2c_if)::get(this,"","vif",vif)) `uvm_fatal("CFG","interface missing") endfunction
++task command(int cmd,logic[7:0] data=0);
++ int watchdog=0;
++ @(negedge vif.clk);vif.master_tx_data=data;vif.cmd_start=(cmd==0);vif.cmd_write=(cmd==1);vif.cmd_read=(cmd==2);vif.cmd_stop=(cmd==3);
++ @(negedge vif.clk);vif.cmd_start=0;vif.cmd_write=0;vif.cmd_read=0;vif.cmd_stop=0;
++ while(vif.master_done!==1&&watchdog<12000) begin @(negedge vif.clk);watchdog++;end
++ if(vif.master_done!==1) `uvm_fatal("TIMEOUT","I2C command response timeout")
++ repeat(5) @(negedge vif.clk);
++endtask
++task run_phase(uvm_phase phase);
++ i2c_seq_item item;
++ wait(vif.reset===0);repeat(10) @(negedge vif.clk);
++ if($test$plusargs("RESET_CASE")) begin
++ command(0);fork
++ command(1,8'h24);
++ begin repeat(2800) @(negedge vif.clk);vif.reset=1;aborted++;repeat(8) @(negedge vif.clk);end
++ join_any
++ disable fork;
++ vif.cmd_start=0;vif.cmd_write=0;vif.cmd_read=0;vif.cmd_stop=0;
++ repeat(8) @(negedge vif.clk);
++ if(vif.scl!==1||vif.sda!==1||vif.master_busy!==0) `uvm_error("RESET","I2C reset must release bus")
++ vif.reset=0;repeat(10) @(negedge vif.clk);
++ end
++ forever begin
++ seq_item_port.get_next_item(item);
++ vif.expected_write=item.write_data;vif.expected_slave=item.slave_tx_data;vif.expected_addr=item.slave_addr;vif.expected_read=item.op;vif.expected_ack=item.read_ack;
++ vif.slave_tx_data=item.slave_tx_data;vif.master_read_ack=item.read_ack;issued++;
++ command(0);command(1,{item.slave_addr,item.op});
++ // Even wrong-address stimulus sends one data byte; checker requires no slave side effect.
++ if(item.op==i2c_seq_item::I2C_WRITE) command(1,item.write_data);else command(2);
++ command(3);repeat(12) @(negedge vif.clk);seq_item_port.item_done();
++ end
++endtask
+ endclass
+--- baseline/tb/i2c_if.sv
++++ enhanced/tb/i2c_if.sv
+@@ -1,6 +1,9 @@
+ interface i2c_if (
+     input logic clk
+ );
++    logic [7:0] expected_write, expected_slave;
++    logic [6:0] expected_addr;
++    logic expected_read, expected_ack;
+     logic       reset;
+ 
+     logic       cmd_start;
+--- baseline/tb/i2c_monitor.sv
++++ enhanced/tb/i2c_monitor.sv
+@@ -1,152 +1,44 @@
+ class i2c_monitor extends uvm_component;
+-
+-    `uvm_component_utils(i2c_monitor)
+-
+-    virtual i2c_if vif;
+-
+-    uvm_analysis_port #(i2c_seq_item) ap;
+-
+-    function new(string name = "i2c_monitor", uvm_component parent = null);
+-        super.new(name, parent);
+-        ap = new("ap", this);
+-    endfunction
+-
+-    function void build_phase(uvm_phase phase);
+-        super.build_phase(phase);
+-
+-        if (!uvm_config_db#(virtual i2c_if)::get(this, "", "vif", vif)) begin
+-            `uvm_fatal("MON", "Failed to get virtual interface")
+-        end
+-    endfunction
+-
+-    task automatic sample_ack_from_sda(output logic ack_value);
+-        // I2C ACK/NACK는 8bit 전송 이후 9번째 SCL clock에서 결정됨
+-        // ACK  = SDA Low  = 0
+-        // NACK = SDA High / Release = 1
+-
+-        repeat (9) begin
+-            @(posedge vif.scl);
+-        end
+-
+-        #1step;
+-
+-        if (vif.sda === 1'b0) begin
+-            ack_value = 1'b0;  // ACK
+-        end else begin
+-            ack_value = 1'b1;  // NACK or released bus
+-        end
+-
+-        `uvm_info("MON", $sformatf("ACK/NACK sampled from SDA: sda=%b ack_value=%0b", vif.sda,
+-                                   ack_value), UVM_MEDIUM)
+-    endtask
+-
+-    virtual task run_phase(uvm_phase phase);
+-        i2c_seq_item item;
+-
+-        logic [7:0] addr_byte;
+-        logic [7:0] data_byte;
+-
+-        wait (vif.reset == 1'b0);
+-
+-        forever begin
+-            // ----------------------------------------------------
+-            // 1. I2C transaction 시작 감지
+-            // ----------------------------------------------------
+-            @(posedge vif.mon_cb.cmd_start);
+-
+-            item = i2c_seq_item::type_id::create("mon_item");
+-
+-            `uvm_info("MON", "Detected I2C START command", UVM_MEDIUM)
+-
+-            // ----------------------------------------------------
+-            // 2. Address phase 감지
+-            //    ADDR+W 또는 ADDR+R 모두 Master가 write command로 보냄
+-            // ----------------------------------------------------
+-            @(posedge vif.mon_cb.cmd_write);
+-            #1step;
+-
+-            addr_byte = vif.mon_cb.master_tx_data;
+-
+-            item.slave_addr = addr_byte[7:1];
+-
+-            if (addr_byte[0] == 1'b0) begin
+-                item.op = i2c_seq_item::I2C_WRITE;
+-            end else begin
+-                item.op = i2c_seq_item::I2C_READ;
+-            end
+-
+-            `uvm_info("MON", $sformatf(
+-                      "Address phase detected: addr_byte=0x%02h slave_addr=0x%02h op=%s",
+-                      addr_byte,
+-                      item.slave_addr,
+-                      (item.op == i2c_seq_item::I2C_WRITE) ? "WRITE" : "READ"
+-                      ), UVM_MEDIUM)
+-
+-            do begin
+-                @(vif.mon_cb);
+-            end while (vif.mon_cb.master_done !== 1'b1);
+-
+-            @(vif.mon_cb);
+-            item.slave_ack_received = vif.mon_cb.slave_ack_received;
+-
+-            // ----------------------------------------------------
+-            // 3-A. WRITE transaction
+-            // START -> ADDR+W -> DATA -> STOP
+-            // ----------------------------------------------------
+-            if (item.op == i2c_seq_item::I2C_WRITE) begin
+-
+-                // Data write command 감지
+-                @(posedge vif.mon_cb.cmd_write);
+-                #1step;
+-
+-                data_byte       = vif.mon_cb.master_tx_data;
+-                item.write_data = data_byte;
+-
+-                `uvm_info("MON", $sformatf("Write data phase detected: write_data=0x%02h",
+-                                           item.write_data), UVM_MEDIUM)
+-
+-                // Slave가 data byte 수신 완료할 때까지 대기
+-                @(posedge vif.mon_cb.slave_rx_done);
+-                #1step;
+-
+-                item.slave_rx_data = vif.mon_cb.slave_rx_data;
+-
+-                `uvm_info("MON",
+-                          $sformatf("Observed WRITE result: expected=0x%02h actual_slave_rx=0x%02h",
+-                                    item.write_data, item.slave_rx_data), UVM_LOW)
+-
+-                ap.write(item);
+-            end  // ----------------------------------------------------
+-                 // 3-B. READ transaction
+-            // START -> ADDR+R -> READ -> STOP
+-            // ----------------------------------------------------
+-            else begin
+-
+-                // Read command 감지
+-                @(posedge vif.mon_cb.cmd_read);
+-                #1step;
+-
+-                item.slave_tx_data = vif.mon_cb.slave_tx_data;
+-
+-                `uvm_info("MON", $sformatf(
+-                          "Read data phase detected: slave_tx_data=0x%02h", item.slave_tx_data),
+-                          UVM_MEDIUM)
+-
+-                // Master read command 완료 대기
+-                @(posedge vif.mon_cb.master_done);
+-                #1step;
+-
+-                item.master_rx_data = vif.mon_cb.master_rx_data;
+-
+-                `uvm_info("MON", $sformatf(
+-                          "Observed READ result: expected_slave_tx=0x%02h actual_master_rx=0x%02h",
+-                          item.slave_tx_data,
+-                          item.master_rx_data
+-                          ), UVM_LOW)
+-
+-                ap.write(item);
+-            end
+-        end
+-    endtask
+-
++`uvm_component_utils(i2c_monitor)
++virtual i2c_if vif;uvm_analysis_port #(i2c_seq_item) ap;int attempts,assert_fails,completed;
++logic prev_scl,prev_sda;bit active;logic[7:0] addr_byte;logic[7:0] old_rx;i2c_seq_item item;
++function new(string name="i2c_monitor",uvm_component parent=null);super.new(name,parent);ap=new("ap",this);endfunction
++function void build_phase(uvm_phase phase);if(!uvm_config_db#(virtual i2c_if)::get(this,"","vif",vif)) `uvm_fatal("CFG","interface missing") endfunction
++function void ck(bit ok,string msg);attempts++;if(!ok) begin assert_fails++;`uvm_error("PIN",msg) end endfunction
++task run_phase(uvm_phase phase);
++ prev_scl=1;prev_sda=1;active=0;
++ forever begin
++ @(negedge vif.clk);
++ if(vif.reset) begin active=0;prev_scl=1;prev_sda=1;end
++ else begin
++ if(prev_sda===1&&vif.sda===0&&vif.scl===1&&prev_scl===1) begin
++ ck(!active,"unexpected repeated START");active=1;item=i2c_seq_item::type_id::create("wire_item");addr_byte=0;item.wire_data=0;old_rx=vif.slave_rx_data;
++ item.slave_addr=vif.expected_addr;item.op=i2c_seq_item::i2c_op_e'(vif.expected_read);item.write_data=vif.expected_write;item.slave_tx_data=vif.expected_slave;item.read_ack=vif.expected_ack;item.starts=1;
++ end
++ if(active) begin
++ ck(!$isunknown({vif.sda,vif.scl}),"X/Z on I2C pins");
++ if(vif.slave_rx_done===1) item.rx_pulses++;
++ if(vif.slave_tx_done===1) item.tx_pulses++;
++ if(prev_scl===0&&vif.scl===1) begin
++ if(item.edge_count<8) addr_byte={addr_byte[6:0],vif.sda};
++ if(item.edge_count==8) item.slave_ack_received=vif.sda;
++ if(item.edge_count>=9&&item.edge_count<17) item.wire_data={item.wire_data[6:0],vif.sda};
++ if(item.edge_count==17) item.wire_data_ack=vif.sda;
++ item.edge_count++;
++ end
++ if(prev_sda===0&&vif.sda===1&&prev_scl===1&&vif.scl===1) begin
++ item.stops++;
++ ck(addr_byte==={item.slave_addr,item.op},"pin address differs from independent request");
++ ck(item.edge_count==19,"single byte transaction requires address/data ACK and STOP rise");
++ ck(!$isunknown(vif.slave_ack_received)&&vif.slave_ack_received===item.slave_ack_received,"top ACK status differs from SDA ACK");
++ item.master_rx_data=vif.master_rx_data;item.slave_rx_data=vif.slave_rx_data;
++ if(item.slave_addr!=7'h12) ck(item.rx_pulses==0&&item.tx_pulses==0&&vif.slave_rx_data===old_rx,"wrong address caused slave side effect");
++ if($test$plusargs("NEGATIVE")) item.wire_data^=1;
++ completed++;ap.write(item);active=0;
++ end
++ end
++ prev_scl=vif.scl;prev_sda=vif.sda;
++ end
++ end
++endtask
+ endclass
+--- baseline/tb/i2c_scoreboard.sv
++++ enhanced/tb/i2c_scoreboard.sv
+@@ -1,153 +1,19 @@
+ class i2c_scoreboard extends uvm_component;
+-
+-    `uvm_component_utils(i2c_scoreboard)
+-
+-    uvm_analysis_imp #(i2c_seq_item, i2c_scoreboard) analysis_export;
+-
+-    localparam logic [6:0] TARGET_ADDR = 7'h12;
+-
+-    int total_cnt;
+-    int write_cnt;
+-    int read_cnt;
+-    int pass_cnt;
+-    int fail_cnt;
+-
+-    function new(string name = "i2c_scoreboard", uvm_component parent = null);
+-        super.new(name, parent);
+-        analysis_export = new("analysis_export", this);
+-    endfunction
+-
+-    function void write(i2c_seq_item item);
+-        bit is_target_addr;
+-
+-        total_cnt++;
+-
+-        is_target_addr = (item.slave_addr == TARGET_ADDR);
+-
+-        if (item.op == i2c_seq_item::I2C_WRITE) begin
+-            write_cnt++;
+-        end else begin
+-            read_cnt++;
+-        end
+-
+-        `uvm_info("SCB", $sformatf(
+-                  "Received item: op=%s addr=0x%02h write_data=0x%02h slave_tx_data=0x%02h master_rx_data=0x%02h slave_rx_data=0x%02h slave_ack_received=%b",
+-                  (item.op == i2c_seq_item::I2C_WRITE) ? "WRITE" : "READ",
+-                  item.slave_addr,
+-                  item.write_data,
+-                  item.slave_tx_data,
+-                  item.master_rx_data,
+-                  item.slave_rx_data,
+-                  item.slave_ack_received
+-                  ), UVM_MEDIUM)
+-
+-        // ----------------------------------------------------
+-        // 1. ACK field unknown check
+-        // ----------------------------------------------------
+-        if (item.slave_ack_received === 1'bx) begin
+-            fail_cnt++;
+-            `uvm_error("SCB", "Slave ACK/NACK is unknown")
+-            return;
+-        end
+-
+-        // ----------------------------------------------------
+-        // 2. NACK handling
+-        // Wrong address에서 NACK는 정상 동작
+-        // ----------------------------------------------------
+-        if (item.slave_ack_received == 1'b1) begin
+-
+-            if (!is_target_addr) begin
+-                pass_cnt++;
+-
+-                `uvm_info("SCB", $sformatf(
+-                                     "[PASS][NACK] Wrong address correctly NACKed: addr=0x%02h",
+-                                     item.slave_addr), UVM_LOW)
+-
+-                return;
+-            end else begin
+-                fail_cnt++;
+-
+-                `uvm_error("SCB", $sformatf(
+-                           "[FAIL][NACK] Target address was NACKed: addr=0x%02h", item.slave_addr))
+-
+-                return;
+-            end
+-        end
+-
+-        // ----------------------------------------------------
+-        // 3. ACK handling
+-        // Wrong address에서 ACK가 나오면 실패
+-        // ----------------------------------------------------
+-        if (item.slave_ack_received == 1'b0) begin
+-
+-            if (!is_target_addr) begin
+-                fail_cnt++;
+-
+-                `uvm_error("SCB", $sformatf("[FAIL][ACK] Wrong address was ACKed: addr=0x%02h",
+-                                            item.slave_addr))
+-
+-                return;
+-            end
+-
+-            `uvm_info("SCB", "Slave ACK observed", UVM_LOW)
+-
+-            // ----------------------------------------------------
+-            // 4-A. WRITE data compare
+-            // ----------------------------------------------------
+-            if (item.op == i2c_seq_item::I2C_WRITE) begin
+-
+-                if (item.write_data === item.slave_rx_data) begin
+-                    pass_cnt++;
+-
+-                    `uvm_info("SCB",
+-                              $sformatf(
+-                                  "[PASS][WRITE] expected_slave_rx=0x%02h actual_slave_rx=0x%02h",
+-                                  item.write_data, item.slave_rx_data), UVM_LOW)
+-                end else begin
+-                    fail_cnt++;
+-
+-                    `uvm_error("SCB", $sformatf(
+-                               "[FAIL][WRITE] expected_slave_rx=0x%02h actual_slave_rx=0x%02h",
+-                               item.write_data,
+-                               item.slave_rx_data
+-                               ))
+-                end
+-            end  // ----------------------------------------------------
+-                 // 4-B. READ data compare
+-                 // ----------------------------------------------------
+-            else begin
+-
+-                if (item.slave_tx_data === item.master_rx_data) begin
+-                    pass_cnt++;
+-
+-                    `uvm_info("SCB",
+-                              $sformatf(
+-                                  "[PASS][READ] expected_master_rx=0x%02h actual_master_rx=0x%02h",
+-                                  item.slave_tx_data, item.master_rx_data), UVM_LOW)
+-                end else begin
+-                    fail_cnt++;
+-
+-                    `uvm_error("SCB", $sformatf(
+-                               "[FAIL][READ] expected_master_rx=0x%02h actual_master_rx=0x%02h",
+-                               item.slave_tx_data,
+-                               item.master_rx_data
+-                               ))
+-                end
+-            end
+-        end
+-    endfunction
+-
+-    function void report_phase(uvm_phase phase);
+-        super.report_phase(phase);
+-
+-        `uvm_info("SCB", "========================================", UVM_LOW)
+-        `uvm_info("SCB", "I2C Scoreboard Summary", UVM_LOW)
+-        `uvm_info("SCB", $sformatf("TOTAL : %0d", total_cnt), UVM_LOW)
+-        `uvm_info("SCB", $sformatf("WRITE : %0d", write_cnt), UVM_LOW)
+-        `uvm_info("SCB", $sformatf("READ  : %0d", read_cnt), UVM_LOW)
+-        `uvm_info("SCB", $sformatf("PASS  : %0d", pass_cnt), UVM_LOW)
+-        `uvm_info("SCB", $sformatf("FAIL  : %0d", fail_cnt), UVM_LOW)
+-        `uvm_info("SCB", "========================================", UVM_LOW)
+-    endfunction
+-
++`uvm_component_utils(i2c_scoreboard)
++uvm_analysis_imp #(i2c_seq_item,i2c_scoreboard) analysis_export;int total_cnt,write_cnt,read_cnt,pass_cnt,fail_cnt,checks;
++function new(string name="i2c_scoreboard",uvm_component parent=null);super.new(name,parent);analysis_export=new("analysis_export",this);endfunction
++function void ck(bit ok,string msg);checks++;if(ok)pass_cnt++;else begin fail_cnt++;`uvm_error("SCB",msg) end endfunction
++function void write(i2c_seq_item item);
++ total_cnt++;if(item.op==i2c_seq_item::I2C_WRITE)write_cnt++;else read_cnt++;
++ ck(!$isunknown(item.slave_ack_received)&&item.slave_ack_received===(item.slave_addr!=7'h12),"address ACK/NACK mismatch");
++ if(item.slave_addr==7'h12) begin
++ if(item.op==i2c_seq_item::I2C_WRITE) begin
++ ck(!$isunknown({item.wire_data,item.slave_rx_data})&&item.wire_data===item.write_data&&item.slave_rx_data===item.write_data,"write data integrity mismatch");
++ ck(item.wire_data_ack===0&&item.rx_pulses==1,"write ACK or receive event mismatch");
++ end else begin
++ ck(!$isunknown({item.wire_data,item.master_rx_data})&&item.wire_data===item.slave_tx_data&&item.master_rx_data===item.slave_tx_data,"read data integrity mismatch");
++ ck(item.wire_data_ack===item.read_ack&&item.tx_pulses==1,"master ACK/NACK or tx event mismatch");
++ end
++ end
++endfunction
+ endclass
+--- baseline/tb/i2c_seq_item.sv
++++ enhanced/tb/i2c_seq_item.sv
+@@ -10,6 +10,10 @@
+     rand logic    [7:0] write_data;
+     rand logic    [7:0] slave_tx_data;
+ 
++    bit read_ack;
++    logic [7:0] wire_data;
++    logic wire_data_ack;
++    int edge_count,starts,stops,rx_pulses,tx_pulses;
+     // monitor가 채워줄 결과값
+     logic         [7:0] master_rx_data;
+     logic         [7:0] slave_rx_data;
+--- baseline/tb/i2c_sequence.sv
++++ enhanced/tb/i2c_sequence.sv
+@@ -1,118 +1,18 @@
+ class i2c_sequence extends uvm_sequence #(i2c_seq_item);
+-
+-    `uvm_object_utils(i2c_sequence)
+-
+-    function new(string name = "i2c_sequence");
+-        super.new(name);
+-    endfunction
+-
+-    task send_write(bit [7:0] data);
+-        i2c_seq_item item;
+-
+-        item = i2c_seq_item::type_id::create("write_item");
+-
+-        start_item(item);
+-
+-        item.op            = i2c_seq_item::I2C_WRITE;
+-        item.slave_addr    = 7'h12;
+-        item.write_data    = data;
+-        item.slave_tx_data = 8'h00;
+-
+-        finish_item(item);
+-
+-        `uvm_info("SEQ", $sformatf("Send WRITE item: addr=0x%02h data=0x%02h", item.slave_addr,
+-                                   item.write_data), UVM_LOW)
+-    endtask
+-
+-    task send_read(bit [7:0] slave_data);
+-        i2c_seq_item item;
+-
+-        item = i2c_seq_item::type_id::create("read_item");
+-
+-        start_item(item);
+-
+-        item.op            = i2c_seq_item::I2C_READ;
+-        item.slave_addr    = 7'h12;
+-        item.write_data    = 8'h00;
+-        item.slave_tx_data = slave_data;
+-
+-        finish_item(item);
+-
+-        `uvm_info("SEQ", $sformatf("Send READ item: addr=0x%02h slave_tx_data=0x%02h",
+-                                   item.slave_addr, item.slave_tx_data), UVM_LOW)
+-    endtask
+-
+-    task send_write_wrong_addr(bit [6:0] addr, bit [7:0] data);
+-        i2c_seq_item item;
+-
+-        item = i2c_seq_item::type_id::create("write_wrong_addr_item");
+-
+-        start_item(item);
+-
+-        item.op            = i2c_seq_item::I2C_WRITE;
+-        item.slave_addr    = addr;
+-        item.write_data    = data;
+-        item.slave_tx_data = 8'h00;
+-
+-        finish_item(item);
+-
+-        `uvm_info("SEQ", $sformatf("Send WRITE WRONG ADDR item: addr=0x%02h data=0x%02h",
+-                                   item.slave_addr, item.write_data), UVM_LOW)
+-    endtask
+-
+-
+-    task send_read_wrong_addr(bit [6:0] addr, bit [7:0] slave_data);
+-        i2c_seq_item item;
+-
+-        item = i2c_seq_item::type_id::create("read_wrong_addr_item");
+-
+-        start_item(item);
+-
+-        item.op            = i2c_seq_item::I2C_READ;
+-        item.slave_addr    = addr;
+-        item.write_data    = 8'h00;
+-        item.slave_tx_data = slave_data;
+-
+-        finish_item(item);
+-
+-        `uvm_info("SEQ", $sformatf("Send READ WRONG ADDR item: addr=0x%02h slave_tx_data=0x%02h",
+-                                   item.slave_addr, item.slave_tx_data), UVM_LOW)
+-    endtask
+-
+-    virtual task body();
+-        `uvm_info("SEQ", "I2C sequence start", UVM_LOW)
+-
+-        // --------------------------------------------------
+-        // 1. Target address WRITE patterns
+-        // cp_write_data bins hit
+-        // --------------------------------------------------
+-        send_write(8'h00);  // zero
+-        send_write(8'hFF);  // ff
+-        send_write(8'hAA);  // aa
+-        send_write(8'h55);  // x55
+-        send_write(8'h3C);  // x3c
+-        send_write(8'h7E);  // misc
+-
+-        // --------------------------------------------------
+-        // 2. Target address READ patterns
+-        // cp_slave_tx_data bins hit
+-        // --------------------------------------------------
+-        send_read(8'h00);  // zero
+-        send_read(8'hFF);  // ff
+-        send_read(8'hA5);  // a5
+-        send_read(8'hC3);  // c3
+-        send_read(8'h5A);  // x5a
+-        send_read(8'h7E);  // misc
+-
+-        // --------------------------------------------------
+-        // 3. Wrong address test
+-        // cp_slave_addr.other_addr + NACK hit 목적
+-        // driver가 item.slave_addr를 실제 주소 전송에 반영해야 함
+-        // --------------------------------------------------
+-        send_write_wrong_addr(7'h34, 8'h55);
+-        send_read_wrong_addr(7'h34, 8'hA5);
+-
+-        `uvm_info("SEQ", "I2C sequence done", UVM_LOW)
+-    endtask
+-
++`uvm_object_utils(i2c_sequence)
++function new(string name="i2c_sequence");super.new(name);endfunction
++task body();
++ i2c_seq_item item;int n=1;string ph;logic [7:0] wp[6]='{0,255,170,85,60,126};logic [7:0] rp[6]='{0,255,165,195,90,126};
++ void'($value$plusargs("N=%d",n));void'($value$plusargs("PHASE=%s",ph));
++ for(int i=0;i<n;i++) begin
++ item=i2c_seq_item::type_id::create("item");start_item(item);
++ item.c_slave_addr.constraint_mode(0);
++ if(!item.randomize() with {slave_addr dist {7'h12:=8,7'h00:=1,7'h7f:=1,7'h11:=1,7'h13:=1};}) `uvm_fatal("RAND","randomize failed")
++ item.read_ack=1; // Last byte must NACK; ACK requests a next byte.
++ if(ph=="directed") begin
++ item.op=i2c_seq_item::i2c_op_e'(i/6%2);item.slave_addr=(i<12)?7'h12:((i%2)?7'h00:7'h7f);item.write_data=wp[i%6];item.slave_tx_data=rp[i%6];
++ end
++ finish_item(item);
++ end
++endtask
+ endclass
+--- baseline/tb/i2c_test.sv
++++ enhanced/tb/i2c_test.sv
+@@ -25,6 +25,8 @@
+         // 마지막 transaction 결과 정리 여유
+         #1000;
+ 
++        if(env.agt.drv.issued!=env.agt.mon.completed) `uvm_error("DRAIN","issued/completed mismatch")
++        `uvm_info("RESULT",$sformatf("issued=%0d completed=%0d checks=%0d passes=%0d fails=%0d attempts=%0d assert_fails=%0d aborted=%0d",env.agt.drv.issued,env.agt.mon.completed,env.scb.checks,env.scb.pass_cnt,env.scb.fail_cnt,env.agt.mon.attempts,env.agt.mon.assert_fails,env.agt.drv.aborted),UVM_NONE)
+         phase.drop_objection(this);
+     endtask
+ 
+--- baseline/tb/tb_i2c.sv
++++ enhanced/tb/tb_i2c.sv
+@@ -67,9 +67,8 @@
+     end
+ 
+     initial begin
+-        $fsdbDumpfile("./out/wave/tb_i2c.fsdb");
+-        $fsdbDumpvars(0);
+-        $fsdbDumpMDA();
++        if ($test$plusargs("WAVE")) begin
++            $dumpfile("trace.vcd"); $dumpvars(0, tb_i2c);
++        end
+     end
+-
+ endmodule

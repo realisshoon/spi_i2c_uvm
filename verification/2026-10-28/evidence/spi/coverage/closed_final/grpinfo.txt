@@ -1,0 +1,374 @@
+Group : spi_pkg::spi_coverage::spi_cg
+
+===============================================================================
+Group : spi_pkg::spi_coverage::spi_cg
+===============================================================================
+SCORE  INSTANCES WEIGHT GOAL   AT LEAST PER INSTANCE AUTO BIN MAX PRINT MISSING 
+ 97.01  97.01    1      100    1        1            64           64            
+
+
+Source File(s) : 
+
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/tb/spi_coverage.sv
+
+1 Instances:
+
+SCORE  WEIGHT GOAL   AT LEAST AUTO BIN MAX PRINT MISSING NAME                 
+ 97.01 1      100    1        64           64            tb_spi.me.obj.spi_cg 
+
+
+
+
+-------------------------------------------------------------------------------
+
+Summary for Group   spi_pkg::spi_coverage::spi_cg
+
+
+
+CATEGORY  EXPECTED UNCOVERED COVERED PERCENT 
+Variables 18       2         16      88.89   
+Crosses   49       0         49      100.00  
+
+
+Variables for Group  spi_pkg::spi_coverage::spi_cg
+
+
+VARIABLE     EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST AUTO BIN MAX COMMENT 
+cp_master_tx 7        0         7       100.00  100  1      1        0                    
+cp_slave_tx  7        0         7       100.00  100  1      1        0                    
+cp_m2s_match 2        1         1       50.00   100  1      1        0                    
+cp_s2m_match 2        1         1       50.00   100  1      1        0                    
+
+
+-------------------------------------------------------------------------------
+===============================================================================
+Group Instance : tb_spi.me.obj.spi_cg
+===============================================================================
+SCORE  WEIGHT GOAL   AT LEAST AUTO BIN MAX PRINT MISSING 
+ 97.01 1      100    1        64           64            
+
+
+Group:
+
+SCORE  INSTANCES WEIGHT GOAL   AT LEAST PER INSTANCE AUTO BIN MAX PRINT MISSING COMMENT NAME                          
+ 97.01  97.01    1      100    1        1            64           64                    spi_pkg::spi_coverage::spi_cg 
+
+
+
+-------------------------------------------------------------------------------
+
+Summary for Group Instance   tb_spi.me.obj.spi_cg
+
+
+
+CATEGORY  EXPECTED UNCOVERED COVERED PERCENT 
+Variables 18       2         16      88.89   
+Crosses   49       0         49      100.00  
+
+
+Variables for Group Instance  tb_spi.me.obj.spi_cg
+
+
+VARIABLE     EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST AUTO BIN MAX COMMENT 
+cp_master_tx 7        0         7       100.00  100  1      1        0                    
+cp_slave_tx  7        0         7       100.00  100  1      1        0                    
+cp_m2s_match 2        1         1       50.00   100  1      1        0                    
+cp_s2m_match 2        1         1       50.00   100  1      1        0                    
+
+
+Crosses for Group Instance  tb_spi.me.obj.spi_cg
+
+
+CROSS            EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST PRINT MISSING COMMENT 
+cross_tx_pattern 49       0         49      100.00  100  1      1        0                     
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_master_tx
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 7        0         7       100.00  
+
+
+User Defined Bins for cp_master_tx
+
+
+Bins
+
+NAME    COUNT AT LEAST 
+high    2715  1        
+mid     5627  1        
+low     2741  1        
+pat_55  51    1        
+pat_aa  48    1        
+all_one 49    1        
+zero    61    1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_slave_tx
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 7        0         7       100.00  
+
+
+User Defined Bins for cp_slave_tx
+
+
+Bins
+
+NAME    COUNT AT LEAST 
+high    2805  1        
+mid     5569  1        
+low     2730  1        
+pat_55  61    1        
+pat_aa  45    1        
+all_one 46    1        
+zero    43    1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_m2s_match
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 2        1         1       50.00   
+
+
+User Defined Bins for cp_m2s_match
+
+
+Uncovered bins
+
+NAME COUNT AT LEAST NUMBER 
+fail 0     1        1      
+
+
+Covered bins
+
+NAME COUNT AT LEAST 
+pass 11193 1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable cp_s2m_match
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 2        1         1       50.00   
+
+
+User Defined Bins for cp_s2m_match
+
+
+Uncovered bins
+
+NAME COUNT AT LEAST NUMBER 
+fail 0     1        1      
+
+
+Covered bins
+
+NAME COUNT AT LEAST 
+pass 11193 1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Cross cross_tx_pattern
+
+
+Samples crossed: cp_master_tx cp_slave_tx
+CATEGORY                           EXPECTED UNCOVERED COVERED PERCENT MISSING 
+Automatically Generated Cross Bins 49       0         49      100.00          
+
+
+Automatically Generated Cross Bins for cross_tx_pattern
+
+
+Bins
+
+cp_master_tx cp_slave_tx COUNT AT LEAST 
+high         high        654   1        
+high         mid         1395  1        
+high         low         649   1        
+high         pat_55      15    1        
+high         pat_aa      11    1        
+high         all_one     10    1        
+high         zero        7     1        
+mid          high        1400  1        
+mid          mid         2803  1        
+mid          low         1373  1        
+mid          pat_55      29    1        
+mid          pat_aa      22    1        
+mid          all_one     26    1        
+mid          zero        25    1        
+low          high        722   1        
+low          mid         1315  1        
+low          low         688   1        
+low          pat_55      15    1        
+low          pat_aa      10    1        
+low          all_one     8     1        
+low          zero        8     1        
+pat_55       high        14    1        
+pat_55       mid         23    1        
+pat_55       low         11    1        
+pat_55       pat_55      1     1        
+pat_55       pat_aa      1     1        
+pat_55       all_one     1     1        
+pat_55       zero        2     1        
+pat_aa       high        9     1        
+pat_aa       mid         23    1        
+pat_aa       low         14    1        
+pat_aa       pat_55      2     1        
+pat_aa       pat_aa      1     1        
+pat_aa       all_one     1     1        
+pat_aa       zero        1     1        
+all_one      high        11    1        
+all_one      mid         25    1        
+all_one      low         11    1        
+all_one      pat_55      1     1        
+all_one      pat_aa      1     1        
+all_one      all_one     1     1        
+all_one      zero        1     1        
+zero         high        18    1        
+zero         mid         31    1        
+zero         low         9     1        
+zero         pat_55      1     1        
+zero         pat_aa      1     1        
+zero         all_one     1     1        
+zero         zero        2     1        
+
+
+Group : spi_pkg::spi_coverage::enhanced_cg
+
+===============================================================================
+Group : spi_pkg::spi_coverage::enhanced_cg
+===============================================================================
+SCORE  INSTANCES WEIGHT GOAL   AT LEAST PER INSTANCE AUTO BIN MAX PRINT MISSING 
+100.00 100.00    1      100    1        1            64           64            
+
+
+Source File(s) : 
+
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/tb/spi_coverage.sv
+
+1 Instances:
+
+SCORE  WEIGHT GOAL   AT LEAST AUTO BIN MAX PRINT MISSING NAME                      
+100.00 1      100    1        64           64            tb_spi.me.obj.enhanced_cg 
+
+
+
+
+-------------------------------------------------------------------------------
+
+Summary for Group   spi_pkg::spi_coverage::enhanced_cg
+
+
+
+CATEGORY  EXPECTED UNCOVERED COVERED PERCENT 
+Variables 20       0         20      100.00  
+
+
+Variables for Group  spi_pkg::spi_coverage::enhanced_cg
+
+
+VARIABLE    EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST AUTO BIN MAX COMMENT 
+divider     4        0         4       100.00  100  1      1        0                    
+master_walk 16       0         16      100.00  100  1      1        0                    
+
+
+-------------------------------------------------------------------------------
+===============================================================================
+Group Instance : tb_spi.me.obj.enhanced_cg
+===============================================================================
+SCORE  WEIGHT GOAL   AT LEAST AUTO BIN MAX PRINT MISSING 
+100.00 1      100    1        64           64            
+
+
+Group:
+
+SCORE  INSTANCES WEIGHT GOAL   AT LEAST PER INSTANCE AUTO BIN MAX PRINT MISSING COMMENT NAME                               
+100.00 100.00    1      100    1        1            64           64                    spi_pkg::spi_coverage::enhanced_cg 
+
+
+
+-------------------------------------------------------------------------------
+
+Summary for Group Instance   tb_spi.me.obj.enhanced_cg
+
+
+
+CATEGORY  EXPECTED UNCOVERED COVERED PERCENT 
+Variables 20       0         20      100.00  
+
+
+Variables for Group Instance  tb_spi.me.obj.enhanced_cg
+
+
+VARIABLE    EXPECTED UNCOVERED COVERED PERCENT GOAL WEIGHT AT LEAST AUTO BIN MAX COMMENT 
+divider     4        0         4       100.00  100  1      1        0                    
+master_walk 16       0         16      100.00  100  1      1        0                    
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable divider
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 4        0         4       100.00  
+
+
+User Defined Bins for divider
+
+
+Bins
+
+NAME     COUNT AT LEAST 
+max      2798  1        
+legacy   2798  1        
+next     2798  1        
+min_sync 2799  1        
+
+
+-------------------------------------------------------------------------------
+
+Summary for Variable master_walk
+
+
+CATEGORY          EXPECTED UNCOVERED COVERED PERCENT 
+User Defined Bins 16       0         16      100.00  
+
+
+User Defined Bins for master_walk
+
+
+Bins
+
+NAME       COUNT AT LEAST 
+zerohot_fe 37    1        
+zerohot_fd 43    1        
+zerohot_fb 37    1        
+zerohot_f7 44    1        
+zerohot_ef 48    1        
+zerohot_df 35    1        
+zerohot_bf 50    1        
+zerohot_7f 40    1        
+onehot_01  49    1        
+onehot_02  62    1        
+onehot_04  50    1        
+onehot_08  50    1        
+onehot_10  52    1        
+onehot_20  51    1        
+onehot_40  45    1        
+onehot_80  61    1        
+
+

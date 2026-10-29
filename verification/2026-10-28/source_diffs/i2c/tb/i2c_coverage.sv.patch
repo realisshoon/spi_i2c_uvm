@@ -1,0 +1,38 @@
+--- baseline/tb/i2c_coverage.sv
++++ followup/tb/i2c_coverage.sv
+@@ -4,6 +4,13 @@
+ 
+     i2c_seq_item item;
+ 
++    covergroup enhanced_cg;
++      option.per_instance=1;
++      addr:coverpoint item.slave_addr {bins target={7'h12};bins low={0};bins high={127};bins below={7'h11};bins above={7'h13};}
++      ack:coverpoint item.read_ack iff(item.op==i2c_seq_item::I2C_READ&&item.slave_addr==7'h12) {bins ack={0};bins nack={1};}
++      direction:coverpoint item.op;
++      address_direction:cross addr,direction;
++    endgroup
+     covergroup i2c_cg;
+         option.per_instance = 1;  // coverage instance 별로 계산
+ 
+@@ -52,18 +59,19 @@
+ 
+     function new(string name = "i2c_coverage", uvm_component parent = null);
+         super.new(name, parent);
+-        i2c_cg = new();
++        i2c_cg = new(); enhanced_cg=new();
+     endfunction
+ 
+     virtual function void write(i2c_seq_item t);
+         item = t;
+-        i2c_cg.sample();
++        i2c_cg.sample(); enhanced_cg.sample();
+ 
+         `uvm_info("COV", $sformatf("Sample coverage: %s", item.convert2string()), UVM_MEDIUM)
+     endfunction
+ 
+     function void report_phase(uvm_phase phase);
+         super.report_phase(phase);
++        `uvm_info("EXT_COV",$sformatf("I2C enhanced coverage=%0.2f",enhanced_cg.get_inst_coverage()),UVM_NONE)
+ 
+         `uvm_info("COV", "========================================", UVM_NONE)
+         `uvm_info("COV", $sformatf(

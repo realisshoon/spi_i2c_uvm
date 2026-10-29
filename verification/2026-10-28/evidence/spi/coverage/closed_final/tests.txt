@@ -1,0 +1,27 @@
+Tests
+
+Total Coverage Summary 
+SCORE   LINE            COND          TOGGLE          FSM         BRANCH        GROUP        
+ 99.28  100.00 133/133  100.00 25/25   97.98 582/594  100.00 6/6  100.00 29/29   97.70 85/87 
+
+
+Total tests in report: 16
+-------------------------------------------------------------------------------
+Data from the following tests was used to generate this report
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/runs/closed_smoke_s55_n4/run/closed_smoke_s55_n4                       
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/runs/closed_directed_s10_n81/run/closed_directed_s10_n81               
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/runs/closed_small_random_s11_n100/run/closed_small_random_s11_n100     
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/runs/closed_intermediate_s12_n1000/run/closed_intermediate_s12_n1000   
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/runs/closed_large_random_s101_n1000/run/closed_large_random_s101_n1000 
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/runs/closed_large_random_s102_n1000/run/closed_large_random_s102_n1000 
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/runs/closed_large_random_s103_n1000/run/closed_large_random_s103_n1000 
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/runs/closed_large_random_s104_n1000/run/closed_large_random_s104_n1000 
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/runs/closed_large_random_s105_n1000/run/closed_large_random_s105_n1000 
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/runs/closed_large_random_s106_n1000/run/closed_large_random_s106_n1000 
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/runs/closed_large_random_s107_n1000/run/closed_large_random_s107_n1000 
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/runs/closed_large_random_s108_n1000/run/closed_large_random_s108_n1000 
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/runs/closed_large_random_s109_n1000/run/closed_large_random_s109_n1000 
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/runs/closed_large_random_s110_n1000/run/closed_large_random_s110_n1000 
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/runs/closed_reset_s22_n4/run/closed_reset_s22_n4                       
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/runs/resetload_reset_load_s66_n4/run/resetload_reset_load_s66_n4       
+

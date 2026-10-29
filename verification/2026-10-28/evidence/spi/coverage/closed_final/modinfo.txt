@@ -1,0 +1,1093 @@
+===============================================================================
+Module : spi_master_slave_top
+===============================================================================
+SCORE   LINE           COND           TOGGLE          FSM            BRANCH        
+ 98.18  --     --      --     --       98.18 108/110  --     --      --     --     
+
+Source File(s) : 
+
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/rtl/spi_master_slave_top.sv
+
+Module self-instances :
+
+SCORE   LINE           COND           TOGGLE          FSM            BRANCH         NAME       
+ 98.18  --     --      --     --       98.18 108/110  --     --      --     --      tb_spi.dut 
+
+
+
+-------------------------------------------------------------------------------
+Toggle Coverage for Module : spi_master_slave_top
+                Total Covered Percent 
+Totals          20    19      95.00   
+Total Bits      110   108     98.18   
+Total Bits 0->1 55    54      98.18   
+Total Bits 1->0 55    54      98.18   
+
+                              
+Ports          16  15  93.75  
+Port Bits      102 100 98.04  
+Port Bits 0->1 51  50  98.04  
+Port Bits 1->0 51  50  98.04  
+
+                            
+Signals          4 4 100.00 
+Signal Bits      8 8 100.00 
+Signal Bits 0->1 4 4 100.00 
+Signal Bits 1->0 4 4 100.00 
+
+Port Details
+                    Toggle Toggle 1->0 Toggle 0->1 Direction 
+clk                 Yes    Yes         Yes         INPUT     
+reset               Yes    Yes         Yes         INPUT     
+start               Yes    Yes         Yes         INPUT     
+clk_div[1:0]        Yes    Yes         Yes         INPUT     
+clk_div[2]          No     No          No          INPUT     
+clk_div[7:3]        Yes    Yes         Yes         INPUT     
+master_tx_data[7:0] Yes    Yes         Yes         INPUT     
+slave_tx_data[7:0]  Yes    Yes         Yes         INPUT     
+master_tx_busy      Yes    Yes         Yes         OUTPUT    
+master_rx_data[7:0] Yes    Yes         Yes         OUTPUT    
+master_rx_done      Yes    Yes         Yes         OUTPUT    
+slave_tx_busy       Yes    Yes         Yes         OUTPUT    
+slave_rx_data[7:0]  Yes    Yes         Yes         OUTPUT    
+slave_rx_done       Yes    Yes         Yes         OUTPUT    
+sclk                Yes    Yes         Yes         OUTPUT    
+mosi                Yes    Yes         Yes         OUTPUT    
+miso                Yes    Yes         Yes         OUTPUT    
+cs_n                Yes    Yes         Yes         OUTPUT    
+
+Signal Details
+       Toggle Toggle 1->0 Toggle 0->1 
+w_sclk Yes    Yes         Yes         
+w_mosi Yes    Yes         Yes         
+w_miso Yes    Yes         Yes         
+w_cs_n Yes    Yes         Yes         
+
+
+-------------------------------------------------------------------------------
+===============================================================================
+Module Instance : tb_spi.dut
+===============================================================================
+
+Instance :
+
+SCORE   LINE           COND           TOGGLE          FSM            BRANCH        
+ 98.18  --     --      --     --       98.18 108/110  --     --      --     --     
+
+
+Instance's subtree :
+
+SCORE   LINE            COND          TOGGLE          FSM         BRANCH       
+ 99.60  100.00 133/133  100.00 25/25   97.98 582/594  100.00 6/6  100.00 29/29 
+
+
+Module : 
+
+SCORE   LINE           COND           TOGGLE          FSM            BRANCH         NAME                 
+ 98.18  --     --      --     --       98.18 108/110  --     --      --     --      spi_master_slave_top 
+
+
+Parent : 
+
+SCORE   LINE           COND           TOGGLE         FSM            BRANCH         NAME   
+--      --     --      --     --      --     --      --     --      --     --      tb_spi 
+
+
+Subtrees :
+
+SCORE   LINE          COND          TOGGLE          FSM            BRANCH        NAME         
+ 99.26  100.00 78/78  100.00 13/13   96.32 262/272  100.00 6/6     100.00 15/15  u_spi_master 
+100.00  100.00 55/55  100.00 12/12  100.00 212/212  --     --      100.00 14/14  u_spi_slave  
+
+
+
+-------------------------------------------------------------------------------
+Since this is the module's only instance, the coverage report is the same as for the module.
+===============================================================================
+Module : spi_master
+===============================================================================
+SCORE   LINE          COND          TOGGLE          FSM         BRANCH       
+ 99.26  100.00 78/78  100.00 13/13   96.32 262/272  100.00 6/6  100.00 15/15 
+
+Source File(s) : 
+
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/rtl/spi_master.sv
+
+Module self-instances :
+
+SCORE   LINE          COND          TOGGLE          FSM         BRANCH        NAME                    
+ 99.26  100.00 78/78  100.00 13/13   96.32 262/272  100.00 6/6  100.00 15/15  tb_spi.dut.u_spi_master 
+
+
+
+-------------------------------------------------------------------------------
+Line Coverage for Module : spi_master
+
+             Line No.   Total   Covered  Percent
+TOTAL                       78       78   100.00
+ALWAYS             59       53       53   100.00
+ALWAYS            162       25       25   100.00
+
+58                          always_comb begin
+59         1/1                  n_state        = c_state;
+60                      
+61         1/1                  n_div_cnt      = c_div_cnt;
+62         1/1                  n_clk_div      = c_clk_div;
+63                      
+64         1/1                  n_sclk         = c_sclk;
+65         1/1                  n_mosi         = c_mosi;
+66         1/1                  n_cs_n         = c_cs_n;
+67         1/1                  n_tx_busy      = c_tx_busy;
+68         1/1                  n_rx_done      = 1'b0;
+69                      
+70         1/1                  n_tx_shift_reg = c_tx_shift_reg;
+71         1/1                  n_rx_shift_reg = c_rx_shift_reg;
+72         1/1                  n_rx_data      = c_rx_data;
+73         1/1                  n_bit_cnt      = c_bit_cnt;
+74                      
+75         1/1                  half_tick      = 1'b0;
+76                      
+77                              // half tick generation
+78         1/1                  if (c_state == DATA || c_state == STOP) begin
+79         1/1                      if (c_div_cnt == c_clk_div) begin
+80         1/1                          n_div_cnt = 8'd0;
+81         1/1                          half_tick = 1'b1;
+82                                  end else begin
+83         1/1                          n_div_cnt = c_div_cnt + 1'b1;
+84                                  end
+85                              end else begin
+86         1/1                      n_div_cnt = 8'd0;
+87                              end
+88                      
+89         1/1                  case (c_state)
+90                                  IDLE: begin
+91         1/1                          n_sclk    = 1'b0;   // Mode0 CPOL=0
+92         1/1                          n_mosi    = 1'b0;   // idle value
+93         1/1                          n_cs_n    = 1'b1;
+94         1/1                          n_tx_busy = 1'b0;
+95         1/1                          n_bit_cnt = 3'd0;
+96                      
+97         1/1                          if (start) begin
+98         1/1                              n_state = LOAD;
+99                                      end
+                        MISSING_ELSE
+100                                 end
+101                     
+102                                 LOAD: begin
+103        1/1                          n_cs_n         = 1'b0;
+104        1/1                          n_tx_busy      = 1'b1;
+105        1/1                          n_clk_div      = clk_div;
+106                     
+107                                     // first bit preload
+108        1/1                          n_mosi         = tx_data[7];
+109        1/1                          n_tx_shift_reg = {tx_data[6:0], 1'b0};
+110                     
+111        1/1                          n_rx_shift_reg = 8'd0;
+112        1/1                          n_bit_cnt      = 3'd0;
+113        1/1                          n_state        = DATA;
+114                                 end
+115                     
+116                                 DATA: begin
+117        1/1                          if (half_tick) begin
+118                                         // SCLK toggle
+119        1/1                              n_sclk = ~c_sclk;
+120                     
+121        1/1                              if (c_sclk == 1'b0) begin
+122                                             // current sclk=0, next sclk=1
+123                                             // rising edge: sample MISO
+124        1/1                                  n_rx_shift_reg = {c_rx_shift_reg[6:0], miso};
+125        1/1                                  if (c_bit_cnt == 3'd7) begin
+126        1/1                                      n_rx_data = {c_rx_shift_reg[6:0], miso};
+127        1/1                                      n_state   = STOP;
+128                                             end else begin
+129        1/1                                      n_bit_cnt = c_bit_cnt + 1'b1;
+130                                             end
+131                                         end else begin
+132                                             // current sclk=1, next sclk=0
+133                                             // falling edge: update next MOSI bit
+134        1/1                                  n_mosi         = c_tx_shift_reg[7];
+135        1/1                                  n_tx_shift_reg = {c_tx_shift_reg[6:0], 1'b0};
+136                                         end
+137                                     end
+                        MISSING_ELSE
+138                                 end
+139                     
+140                                 STOP: begin
+141                                   // Complete the last programmed high half-period before CS release.
+142        1/1                        if (half_tick) begin
+143        1/1                          n_sclk    = 1'b0;
+144        1/1                          n_cs_n    = 1'b1;
+145        1/1                          n_tx_busy = 1'b0;
+146        1/1                          n_rx_done = 1'b1;
+147        1/1                          n_mosi    = 1'b0;
+148        1/1                          n_state   = IDLE;
+149                                   end
+                        MISSING_ELSE
+150                                 end
+151                     
+152                                 default: begin
+153        1/1                          n_state = IDLE;
+154                                 end
+155                             endcase
+156                         end
+157                     
+158                         // =========================
+159                         // Sequential register update
+160                         // =========================
+161                         always_ff @(posedge clk or posedge reset) begin
+162        1/1                  if (reset) begin
+163        1/1                      c_state        <= IDLE;
+164                     
+165        1/1                      c_div_cnt      <= 8'd0;
+166        1/1                      c_clk_div      <= 8'd0;
+167                     
+168        1/1                      c_sclk         <= 1'b0;
+169        1/1                      c_mosi         <= 1'b0;
+170        1/1                      c_cs_n         <= 1'b1;
+171        1/1                      c_tx_busy      <= 1'b0;
+172        1/1                      c_rx_done      <= 1'b0;
+173                     
+174        1/1                      c_tx_shift_reg <= 8'd0;
+175        1/1                      c_rx_shift_reg <= 8'd0;
+176        1/1                      c_rx_data      <= 8'd0;
+177        1/1                      c_bit_cnt      <= 3'd0;
+178                             end else begin
+179        1/1                      c_state        <= n_state;
+180                     
+181        1/1                      c_div_cnt      <= n_div_cnt;
+182        1/1                      c_clk_div      <= n_clk_div;
+183                     
+184        1/1                      c_sclk         <= n_sclk;
+185        1/1                      c_mosi         <= n_mosi;
+186        1/1                      c_cs_n         <= n_cs_n;
+187        1/1                      c_tx_busy      <= n_tx_busy;
+188        1/1                      c_rx_done      <= n_rx_done;
+189                     
+190        1/1                      c_tx_shift_reg <= n_tx_shift_reg;
+191        1/1                      c_rx_shift_reg <= n_rx_shift_reg;
+192        1/1                      c_rx_data      <= n_rx_data;
+193        1/1                      c_bit_cnt      <= n_bit_cnt;
+
+-------------------------------------------------------------------------------
+Cond Coverage for Module : spi_master
+
+               Total   Covered  Percent
+Conditions         13       13   100.00
+Logical            13       13   100.00
+Non-Logical         0        0
+Event               0        0
+
+ LINE       78
+ EXPRESSION ((c_state == DATA) || (c_state == STOP))
+             --------1--------    --------2--------
+
+-1- -2- Status
+ 0   0  Covered
+ 0   1  Covered
+ 1   0  Covered
+
+ LINE       78
+ SUB-EXPRESSION (c_state == DATA)
+                --------1--------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       78
+ SUB-EXPRESSION (c_state == STOP)
+                --------1--------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       79
+ EXPRESSION (c_div_cnt == c_clk_div)
+            ------------1-----------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       121
+ EXPRESSION (c_sclk == 1'b0)
+            --------1-------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       125
+ EXPRESSION (c_bit_cnt == 3'd7)
+            ---------1---------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+-------------------------------------------------------------------------------
+Toggle Coverage for Module : spi_master
+                Total Covered Percent 
+Totals          39    34      87.18   
+Total Bits      272   262     96.32   
+Total Bits 0->1 136   131     96.32   
+Total Bits 1->0 136   131     96.32   
+
+                            
+Ports          14 11 78.57  
+Port Bits      70 64 91.43  
+Port Bits 0->1 35 32 91.43  
+Port Bits 1->0 35 32 91.43  
+
+                                
+Signals          25  23  92.00  
+Signal Bits      202 198 98.02  
+Signal Bits 0->1 101 99  98.02  
+Signal Bits 1->0 101 99  98.02  
+
+Port Details
+             Toggle Toggle 1->0 Toggle 0->1 Direction 
+clk          Yes    Yes         Yes         INPUT     
+reset        Yes    Yes         Yes         INPUT     
+start        Yes    Yes         Yes         INPUT     
+cpol         No     No          No          INPUT     
+cpha         No     No          No          INPUT     
+clk_div[1:0] Yes    Yes         Yes         INPUT     
+clk_div[2]   No     No          No          INPUT     
+clk_div[7:3] Yes    Yes         Yes         INPUT     
+tx_data[7:0] Yes    Yes         Yes         INPUT     
+tx_busy      Yes    Yes         Yes         OUTPUT    
+rx_data[7:0] Yes    Yes         Yes         OUTPUT    
+rx_done      Yes    Yes         Yes         OUTPUT    
+sclk         Yes    Yes         Yes         OUTPUT    
+mosi         Yes    Yes         Yes         OUTPUT    
+miso         Yes    Yes         Yes         INPUT     
+cs_n         Yes    Yes         Yes         OUTPUT    
+
+Signal Details
+                    Toggle Toggle 1->0 Toggle 0->1 
+c_state[1:0]        Yes    Yes         Yes         
+n_state[1:0]        Yes    Yes         Yes         
+c_div_cnt[7:0]      Yes    Yes         Yes         
+n_div_cnt[7:0]      Yes    Yes         Yes         
+c_clk_div[7:0]      Yes    Yes         Yes         
+n_clk_div[7:0]      Yes    Yes         Yes         
+c_sclk              Yes    Yes         Yes         
+n_sclk              Yes    Yes         Yes         
+c_mosi              Yes    Yes         Yes         
+n_mosi              Yes    Yes         Yes         
+c_cs_n              Yes    Yes         Yes         
+n_cs_n              Yes    Yes         Yes         
+c_tx_busy           Yes    Yes         Yes         
+n_tx_busy           Yes    Yes         Yes         
+c_rx_done           Yes    Yes         Yes         
+n_rx_done           Yes    Yes         Yes         
+c_tx_shift_reg[0]   No     No          No          
+c_tx_shift_reg[7:1] Yes    Yes         Yes         
+n_tx_shift_reg[0]   No     No          No          
+n_tx_shift_reg[7:1] Yes    Yes         Yes         
+c_rx_shift_reg[7:0] Yes    Yes         Yes         
+n_rx_shift_reg[7:0] Yes    Yes         Yes         
+c_rx_data[7:0]      Yes    Yes         Yes         
+n_rx_data[7:0]      Yes    Yes         Yes         
+c_bit_cnt[2:0]      Yes    Yes         Yes         
+n_bit_cnt[2:0]      Yes    Yes         Yes         
+half_tick           Yes    Yes         Yes         
+
+
+-------------------------------------------------------------------------------
+FSM Coverage for Module : spi_master
+Summary for FSM :: c_state
+            Total Covered Percent                         
+States      4     4       100.00  (Not included in score) 
+Transitions 6     6       100.00                          
+Sequences   0     0                                       
+
+State, Transition and Sequence Details for FSM :: c_state
+-------------------------------------------------------------------------------
+states Line No. Covered 
+DATA   113      Covered 
+IDLE   163      Covered 
+LOAD   98       Covered 
+STOP   127      Covered 
+
+transitions Line No. Covered 
+DATA->IDLE  163      Covered 
+DATA->STOP  127      Covered 
+IDLE->LOAD  98       Covered 
+LOAD->DATA  113      Covered 
+LOAD->IDLE  163      Covered 
+STOP->IDLE  163      Covered 
+
+
+-------------------------------------------------------------------------------
+Branch Coverage for Module : spi_master
+         Line No. Total Covered Percent 
+Branches          15    15      100.00  
+IF       78       3     3       100.00  
+CASE     89       10    10      100.00  
+IF       162      2     2       100.00  
+
+
+78                 if (c_state == DATA || c_state == STOP) begin
+                   -1-  
+79                     if (c_div_cnt == c_clk_div) begin
+                       -2-  
+80                         n_div_cnt = 8'd0;
+                           ==>
+81                         half_tick = 1'b1;
+82                     end else begin
+83                         n_div_cnt = c_div_cnt + 1'b1;
+                           ==>
+84                     end
+85                 end else begin
+86                     n_div_cnt = 8'd0;
+                       ==>
+
+Branches:
+
+-1- -2- Status  
+1   1   Covered 
+1   0   Covered 
+0   -   Covered 
+
+
+89                 case (c_state)
+                   -1-  
+90                     IDLE: begin
+91                         n_sclk    = 1'b0;   // Mode0 CPOL=0
+92                         n_mosi    = 1'b0;   // idle value
+93                         n_cs_n    = 1'b1;
+94                         n_tx_busy = 1'b0;
+95                         n_bit_cnt = 3'd0;
+96         
+97                         if (start) begin
+                           -2-  
+98                             n_state = LOAD;
+                               ==>
+99                         end
+                           MISSING_ELSE
+                           ==>
+100                    end
+101        
+102                    LOAD: begin
+103                        n_cs_n         = 1'b0;
+                           ==>
+104                        n_tx_busy      = 1'b1;
+105                        n_clk_div      = clk_div;
+106        
+107                        // first bit preload
+108                        n_mosi         = tx_data[7];
+109                        n_tx_shift_reg = {tx_data[6:0], 1'b0};
+110        
+111                        n_rx_shift_reg = 8'd0;
+112                        n_bit_cnt      = 3'd0;
+113                        n_state        = DATA;
+114                    end
+115        
+116                    DATA: begin
+117                        if (half_tick) begin
+                           -3-  
+118                            // SCLK toggle
+119                            n_sclk = ~c_sclk;
+120        
+121                            if (c_sclk == 1'b0) begin
+                               -4-  
+122                                // current sclk=0, next sclk=1
+123                                // rising edge: sample MISO
+124                                n_rx_shift_reg = {c_rx_shift_reg[6:0], miso};
+125                                if (c_bit_cnt == 3'd7) begin
+                                   -5-  
+126                                    n_rx_data = {c_rx_shift_reg[6:0], miso};
+                                       ==>
+127                                    n_state   = STOP;
+128                                end else begin
+129                                    n_bit_cnt = c_bit_cnt + 1'b1;
+                                       ==>
+130                                end
+131                            end else begin
+132                                // current sclk=1, next sclk=0
+133                                // falling edge: update next MOSI bit
+134                                n_mosi         = c_tx_shift_reg[7];
+                                   ==>
+135                                n_tx_shift_reg = {c_tx_shift_reg[6:0], 1'b0};
+136                            end
+137                        end
+                           MISSING_ELSE
+                           ==>
+138                    end
+139        
+140                    STOP: begin
+141                      // Complete the last programmed high half-period before CS release.
+142                      if (half_tick) begin
+                         -6-  
+143                        n_sclk    = 1'b0;
+                           ==>
+144                        n_cs_n    = 1'b1;
+145                        n_tx_busy = 1'b0;
+146                        n_rx_done = 1'b1;
+147                        n_mosi    = 1'b0;
+148                        n_state   = IDLE;
+149                      end
+                         MISSING_ELSE
+                         ==>
+150                    end
+151        
+152                    default: begin
+153                        n_state = IDLE;
+                           ==>
+
+Branches:
+
+-1-     -2- -3- -4- -5- -6- Status  
+IDLE    1   -   -   -   -   Covered 
+IDLE    0   -   -   -   -   Covered 
+LOAD    -   -   -   -   -   Covered 
+DATA    -   1   1   1   -   Covered 
+DATA    -   1   1   0   -   Covered 
+DATA    -   1   0   -   -   Covered 
+DATA    -   0   -   -   -   Covered 
+STOP    -   -   -   -   1   Covered 
+STOP    -   -   -   -   0   Covered 
+default -   -   -   -   -   Covered 
+
+
+162                if (reset) begin
+                   -1-  
+163                    c_state        <= IDLE;
+                       ==>
+164        
+165                    c_div_cnt      <= 8'd0;
+166                    c_clk_div      <= 8'd0;
+167        
+168                    c_sclk         <= 1'b0;
+169                    c_mosi         <= 1'b0;
+170                    c_cs_n         <= 1'b1;
+171                    c_tx_busy      <= 1'b0;
+172                    c_rx_done      <= 1'b0;
+173        
+174                    c_tx_shift_reg <= 8'd0;
+175                    c_rx_shift_reg <= 8'd0;
+176                    c_rx_data      <= 8'd0;
+177                    c_bit_cnt      <= 3'd0;
+178                end else begin
+179                    c_state        <= n_state;
+                       ==>
+
+Branches:
+
+-1- Status  
+1   Covered 
+0   Covered 
+
+
+-------------------------------------------------------------------------------
+===============================================================================
+Module Instance : tb_spi.dut.u_spi_master
+===============================================================================
+
+Instance :
+
+SCORE   LINE          COND          TOGGLE          FSM         BRANCH       
+ 99.26  100.00 78/78  100.00 13/13   96.32 262/272  100.00 6/6  100.00 15/15 
+
+
+Instance's subtree :
+
+SCORE   LINE          COND          TOGGLE          FSM         BRANCH       
+ 99.26  100.00 78/78  100.00 13/13   96.32 262/272  100.00 6/6  100.00 15/15 
+
+
+Module : 
+
+SCORE   LINE          COND          TOGGLE          FSM         BRANCH        NAME       
+ 99.26  100.00 78/78  100.00 13/13   96.32 262/272  100.00 6/6  100.00 15/15  spi_master 
+
+
+Parent : 
+
+SCORE   LINE           COND           TOGGLE          FSM            BRANCH         NAME 
+ 98.18  --     --      --     --       98.18 108/110  --     --      --     --      dut  
+
+
+Subtrees :
+
+
+no children
+----------------
+
+
+-------------------------------------------------------------------------------
+Since this is the module's only instance, the coverage report is the same as for the module.
+===============================================================================
+Module : spi_slave
+===============================================================================
+SCORE   LINE          COND          TOGGLE          FSM            BRANCH       
+100.00  100.00 55/55  100.00 12/12  100.00 212/212  --     --      100.00 14/14 
+
+Source File(s) : 
+
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/rtl/spi_slave.sv
+
+Module self-instances :
+
+SCORE   LINE          COND          TOGGLE          FSM            BRANCH        NAME                   
+100.00  100.00 55/55  100.00 12/12  100.00 212/212  --     --      100.00 14/14  tb_spi.dut.u_spi_slave 
+
+
+
+-------------------------------------------------------------------------------
+Line Coverage for Module : spi_slave
+
+             Line No.   Total   Covered  Percent
+TOTAL                       55       55   100.00
+ALWAYS             63       34       34   100.00
+ALWAYS            124       21       21   100.00
+
+62                              // synchronizer next
+63         1/1                  n_sclk_sync    = {c_sclk_sync[1:0], sclk};
+64         1/1                  n_cs_n_sync    = {c_cs_n_sync[1:0], cs_n};
+65         1/1                  n_mosi_sync    = {c_mosi_sync[0], mosi};
+66                      
+67         1/1                  n_rx_shift_reg = c_rx_shift_reg;
+68         1/1                  n_tx_shift_reg = c_tx_shift_reg;
+69                      
+70         1/1                  n_rx_data      = c_rx_data;
+71         1/1                  n_bit_cnt      = c_bit_cnt;
+72                      
+73         1/1                  n_rx_done      = 1'b0;
+74         1/1                  n_tx_busy      = c_tx_busy;
+75         1/1                  n_miso         = c_miso;
+76                      
+77                              // CS falling: transaction start
+78         1/1                  if (cs_fall) begin
+79         1/1                      n_tx_busy      = 1'b1;
+80                      
+81         1/1                      n_tx_shift_reg = tx_data;
+82         1/1                      n_miso         = tx_data[7];
+83                      
+84         1/1                      n_rx_shift_reg = 8'd0;
+85         1/1                      n_bit_cnt      = 3'd0;
+86         1/1                      n_rx_done      = 1'b0;
+87                              end
+                        MISSING_ELSE
+88                      
+89                              // Active transaction
+90         1/1                  if (cs_active) begin
+91                                  // rising edge: sample MOSI
+92         1/1                      if (sclk_rise) begin
+93         1/1                          n_rx_shift_reg = {c_rx_shift_reg[6:0], mosi_sampled};
+94                      
+95         1/1                          if (c_bit_cnt == 3'd7) begin
+96         1/1                              n_rx_data = {c_rx_shift_reg[6:0], mosi_sampled};
+97         1/1                              n_rx_done = 1'b1;
+98         1/1                              n_bit_cnt = 3'd0;
+99                                      end else begin
+100        1/1                              n_bit_cnt = c_bit_cnt + 1'b1;
+101                                     end
+102                                 end
+                        MISSING_ELSE
+103                     
+104                                 // falling edge: update next MISO bit
+105        1/1                      if (sclk_fall) begin
+106        1/1                          n_miso         = c_tx_shift_reg[6];
+107        1/1                          n_tx_shift_reg = {c_tx_shift_reg[6:0], 1'b0};
+108                                 end
+                        MISSING_ELSE
+109                             end
+                        MISSING_ELSE
+110                     
+111                             // CS rising: transaction end
+112        1/1                  if (cs_rise) begin
+113        1/1                      n_tx_busy      = 1'b0;
+114        1/1                      n_miso         = 1'b0;
+115                     
+116        1/1                      n_rx_shift_reg = 8'd0;
+117        1/1                      n_tx_shift_reg = 8'd0;
+118        1/1                      n_bit_cnt      = 3'd0;
+119                             end
+                        MISSING_ELSE
+120                         end
+121                     
+122                         // Sequential logic
+123                         always_ff @(posedge clk or posedge reset) begin
+124        1/1                  if (reset) begin
+125        1/1                      c_sclk_sync    <= 3'b000;
+126        1/1                      c_cs_n_sync    <= 3'b111;
+127        1/1                      c_mosi_sync    <= 2'b00;
+128                     
+129        1/1                      c_rx_shift_reg <= 8'd0;
+130        1/1                      c_tx_shift_reg <= 8'd0;
+131                     
+132        1/1                      c_rx_data      <= 8'd0;
+133        1/1                      c_bit_cnt      <= 3'd0;
+134                     
+135        1/1                      c_rx_done      <= 1'b0;
+136        1/1                      c_tx_busy      <= 1'b0;
+137        1/1                      c_miso         <= 1'b0;
+138                             end else begin
+139        1/1                      c_sclk_sync    <= n_sclk_sync;
+140        1/1                      c_cs_n_sync    <= n_cs_n_sync;
+141        1/1                      c_mosi_sync    <= n_mosi_sync;
+142                     
+143        1/1                      c_rx_shift_reg <= n_rx_shift_reg;
+144        1/1                      c_tx_shift_reg <= n_tx_shift_reg;
+145                     
+146        1/1                      c_rx_data      <= n_rx_data;
+147        1/1                      c_bit_cnt      <= n_bit_cnt;
+148                     
+149        1/1                      c_rx_done      <= n_rx_done;
+150        1/1                      c_tx_busy      <= n_tx_busy;
+151        1/1                      c_miso         <= n_miso;
+
+-------------------------------------------------------------------------------
+Cond Coverage for Module : spi_slave
+
+               Total   Covered  Percent
+Conditions         12       12   100.00
+Logical            12       12   100.00
+Non-Logical         0        0
+Event               0        0
+
+ LINE       95
+ EXPRESSION (c_bit_cnt == 3'd7)
+            ---------1---------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       32
+ EXPRESSION (c_sclk_sync[2:1] == 2'b1)
+            -------------1------------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       33
+ EXPRESSION (c_sclk_sync[2:1] == 2'b10)
+            -------------1-------------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       35
+ EXPRESSION (c_cs_n_sync[2:1] == 2'b10)
+            -------------1-------------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       36
+ EXPRESSION (c_cs_n_sync[2:1] == 2'b1)
+            -------------1------------
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+ LINE       56
+ EXPRESSION (cs_active ? c_miso : 1'b0)
+             ----1----
+
+-1- Status
+ 0  Covered
+ 1  Covered
+
+-------------------------------------------------------------------------------
+Toggle Coverage for Module : spi_slave
+                Total Covered Percent 
+Totals          36    36      100.00  
+Total Bits      212   212     100.00  
+Total Bits 0->1 106   106     100.00  
+Total Bits 1->0 106   106     100.00  
+
+                            
+Ports          10 10 100.00 
+Port Bits      48 48 100.00 
+Port Bits 0->1 24 24 100.00 
+Port Bits 1->0 24 24 100.00 
+
+                                
+Signals          26  26  100.00 
+Signal Bits      164 164 100.00 
+Signal Bits 0->1 82  82  100.00 
+Signal Bits 1->0 82  82  100.00 
+
+Port Details
+             Toggle Toggle 1->0 Toggle 0->1 Direction 
+clk          Yes    Yes         Yes         INPUT     
+reset        Yes    Yes         Yes         INPUT     
+sclk         Yes    Yes         Yes         INPUT     
+mosi         Yes    Yes         Yes         INPUT     
+miso         Yes    Yes         Yes         OUTPUT    
+cs_n         Yes    Yes         Yes         INPUT     
+tx_data[7:0] Yes    Yes         Yes         INPUT     
+rx_data[7:0] Yes    Yes         Yes         OUTPUT    
+rx_done      Yes    Yes         Yes         OUTPUT    
+tx_busy      Yes    Yes         Yes         OUTPUT    
+
+Signal Details
+                    Toggle Toggle 1->0 Toggle 0->1 
+c_sclk_sync[2:0]    Yes    Yes         Yes         
+n_sclk_sync[2:0]    Yes    Yes         Yes         
+c_cs_n_sync[2:0]    Yes    Yes         Yes         
+n_cs_n_sync[2:0]    Yes    Yes         Yes         
+c_mosi_sync[1:0]    Yes    Yes         Yes         
+n_mosi_sync[1:0]    Yes    Yes         Yes         
+sclk_rise           Yes    Yes         Yes         
+sclk_fall           Yes    Yes         Yes         
+cs_fall             Yes    Yes         Yes         
+cs_rise             Yes    Yes         Yes         
+cs_active           Yes    Yes         Yes         
+mosi_sampled        Yes    Yes         Yes         
+c_rx_shift_reg[7:0] Yes    Yes         Yes         
+n_rx_shift_reg[7:0] Yes    Yes         Yes         
+c_tx_shift_reg[7:0] Yes    Yes         Yes         
+n_tx_shift_reg[7:0] Yes    Yes         Yes         
+c_rx_data[7:0]      Yes    Yes         Yes         
+n_rx_data[7:0]      Yes    Yes         Yes         
+c_bit_cnt[2:0]      Yes    Yes         Yes         
+n_bit_cnt[2:0]      Yes    Yes         Yes         
+c_rx_done           Yes    Yes         Yes         
+n_rx_done           Yes    Yes         Yes         
+c_tx_busy           Yes    Yes         Yes         
+n_tx_busy           Yes    Yes         Yes         
+c_miso              Yes    Yes         Yes         
+n_miso              Yes    Yes         Yes         
+
+
+-------------------------------------------------------------------------------
+Branch Coverage for Module : spi_slave
+         Line No. Total Covered Percent 
+Branches          14    14      100.00  
+TERNARY  56       2     2       100.00  
+IF       78       2     2       100.00  
+IF       90       6     6       100.00  
+IF       112      2     2       100.00  
+IF       124      2     2       100.00  
+
+
+56             assign miso = cs_active ? c_miso : 1'b0;
+                                       -1-  
+                                       ==>  
+                                       ==>  
+
+Branches:
+
+-1- Status  
+1   Covered 
+0   Covered 
+
+
+78                 if (cs_fall) begin
+                   -1-  
+79                     n_tx_busy      = 1'b1;
+                       ==>
+80         
+81                     n_tx_shift_reg = tx_data;
+82                     n_miso         = tx_data[7];
+83         
+84                     n_rx_shift_reg = 8'd0;
+85                     n_bit_cnt      = 3'd0;
+86                     n_rx_done      = 1'b0;
+87                 end
+                   MISSING_ELSE
+                   ==>
+
+Branches:
+
+-1- Status  
+1   Covered 
+0   Covered 
+
+
+90                 if (cs_active) begin
+                   -1-  
+91                     // rising edge: sample MOSI
+92                     if (sclk_rise) begin
+                       -2-  
+93                         n_rx_shift_reg = {c_rx_shift_reg[6:0], mosi_sampled};
+94         
+95                         if (c_bit_cnt == 3'd7) begin
+                           -3-  
+96                             n_rx_data = {c_rx_shift_reg[6:0], mosi_sampled};
+                               ==>
+97                             n_rx_done = 1'b1;
+98                             n_bit_cnt = 3'd0;
+99                         end else begin
+100                            n_bit_cnt = c_bit_cnt + 1'b1;
+                               ==>
+101                        end
+102                    end
+                       MISSING_ELSE
+                       ==>
+103        
+104                    // falling edge: update next MISO bit
+105                    if (sclk_fall) begin
+                       -4-  
+106                        n_miso         = c_tx_shift_reg[6];
+                           ==>
+107                        n_tx_shift_reg = {c_tx_shift_reg[6:0], 1'b0};
+108                    end
+                       MISSING_ELSE
+                       ==>
+109                end
+                   MISSING_ELSE
+                   ==>
+
+Branches:
+
+-1- -2- -3- -4- Status  
+1   1   1   -   Covered 
+1   1   0   -   Covered 
+1   0   -   -   Covered 
+1   -   -   1   Covered 
+1   -   -   0   Covered 
+0   -   -   -   Covered 
+
+
+112                if (cs_rise) begin
+                   -1-  
+113                    n_tx_busy      = 1'b0;
+                       ==>
+114                    n_miso         = 1'b0;
+115        
+116                    n_rx_shift_reg = 8'd0;
+117                    n_tx_shift_reg = 8'd0;
+118                    n_bit_cnt      = 3'd0;
+119                end
+                   MISSING_ELSE
+                   ==>
+
+Branches:
+
+-1- Status  
+1   Covered 
+0   Covered 
+
+
+124                if (reset) begin
+                   -1-  
+125                    c_sclk_sync    <= 3'b000;
+                       ==>
+126                    c_cs_n_sync    <= 3'b111;
+127                    c_mosi_sync    <= 2'b00;
+128        
+129                    c_rx_shift_reg <= 8'd0;
+130                    c_tx_shift_reg <= 8'd0;
+131        
+132                    c_rx_data      <= 8'd0;
+133                    c_bit_cnt      <= 3'd0;
+134        
+135                    c_rx_done      <= 1'b0;
+136                    c_tx_busy      <= 1'b0;
+137                    c_miso         <= 1'b0;
+138                end else begin
+139                    c_sclk_sync    <= n_sclk_sync;
+                       ==>
+
+Branches:
+
+-1- Status  
+1   Covered 
+0   Covered 
+
+
+-------------------------------------------------------------------------------
+===============================================================================
+Module Instance : tb_spi.dut.u_spi_slave
+===============================================================================
+
+Instance :
+
+SCORE   LINE          COND          TOGGLE          FSM            BRANCH       
+100.00  100.00 55/55  100.00 12/12  100.00 212/212  --     --      100.00 14/14 
+
+
+Instance's subtree :
+
+SCORE   LINE          COND          TOGGLE          FSM            BRANCH       
+100.00  100.00 55/55  100.00 12/12  100.00 212/212  --     --      100.00 14/14 
+
+
+Module : 
+
+SCORE   LINE          COND          TOGGLE          FSM            BRANCH        NAME      
+100.00  100.00 55/55  100.00 12/12  100.00 212/212  --     --      100.00 14/14  spi_slave 
+
+
+Parent : 
+
+SCORE   LINE           COND           TOGGLE          FSM            BRANCH         NAME 
+ 98.18  --     --      --     --       98.18 108/110  --     --      --     --      dut  
+
+
+Subtrees :
+
+
+no children
+----------------
+
+
+-------------------------------------------------------------------------------
+Since this is the module's only instance, the coverage report is the same as for the module.
+===============================================================================
+Module : tb_spi
+===============================================================================
+SCORE   LINE           COND           TOGGLE         FSM            BRANCH        
+--      --     --      --     --      --     --      --     --      --     --     
+
+Source File(s) : 
+
+/home/pedu36/workspace/UVM_ENHANCEMENT_20261019/projects/spi/tb/tb_spi.sv
+
+Module self-instances :
+
+SCORE   LINE           COND           TOGGLE         FSM            BRANCH         NAME   
+--      --     --      --     --      --     --      --     --      --     --      tb_spi 
+
+
+
+-------------------------------------------------------------------------------
+===============================================================================
+Module Instance : tb_spi
+===============================================================================
+
+Instance :
+
+SCORE   LINE           COND           TOGGLE         FSM            BRANCH        
+--      --     --      --     --      --     --      --     --      --     --     
+
+
+Instance's subtree :
+
+SCORE   LINE            COND          TOGGLE          FSM         BRANCH       
+ 99.60  100.00 133/133  100.00 25/25   97.98 582/594  100.00 6/6  100.00 29/29 
+
+
+Module : 
+
+SCORE   LINE           COND           TOGGLE         FSM            BRANCH         NAME   
+--      --     --      --     --      --     --      --     --      --     --      tb_spi 
+
+
+Parent : 
+
+none
+----------------
+
+
+Subtrees :
+
+SCORE   LINE            COND          TOGGLE          FSM         BRANCH        NAME 
+ 99.60  100.00 133/133  100.00 25/25   97.98 582/594  100.00 6/6  100.00 29/29  dut  
+
+
+
+-------------------------------------------------------------------------------
+Since this is the module's only instance, the coverage report is the same as for the module.

@@ -1,0 +1,13 @@
+--- baseline/tb/i2c_seq_item.sv
++++ followup/tb/i2c_seq_item.sv
+@@ -10,6 +10,10 @@
+     rand logic    [7:0] write_data;
+     rand logic    [7:0] slave_tx_data;
+ 
++    bit read_ack;
++    logic [7:0] wire_data;
++    logic wire_data_ack;
++    int edge_count,starts,stops,rx_pulses,tx_pulses;
+     // monitor가 채워줄 결과값
+     logic         [7:0] master_rx_data;
+     logic         [7:0] slave_rx_data;

@@ -1,0 +1,12 @@
+--- baseline/tb/i2c_if.sv
++++ followup/tb/i2c_if.sv
+@@ -1,6 +1,9 @@
+ interface i2c_if (
+     input logic clk
+ );
++    logic [7:0] expected_write, expected_slave;
++    logic [6:0] expected_addr;
++    logic expected_read, expected_ack;
+     logic       reset;
+ 
+     logic       cmd_start;
